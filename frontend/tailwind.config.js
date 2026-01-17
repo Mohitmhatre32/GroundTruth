@@ -7,7 +7,7 @@ export default {
     theme: {
       extend: {
         colors: {
-          primary: '#027598',     // Deep Soft Teal-Blue (Headers/Nav/Active States)
+          primary: '#056272ff',     // Deep Soft Teal-Blue (Headers/Nav/Active States)
           secondary: '#dbb432',   // Dark Mustard Yellow (Highlights/Accents)
           background: '#F3F5F7',  // Soft Grey (Global Background)
           surface: '#FFFFFF',     // Cards / Panels / Modals
