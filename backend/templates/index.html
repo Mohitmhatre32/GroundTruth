@@ -4,32 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GroundTruth Decision Support System</title>
-    <!-- External Libraries -->
+    
+    <!-- External Libraries (Chart.js for Graphs, Leaflet for Maps) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <style>
-        /* BASE STYLES */
+        /* --- BASE STYLES --- */
         body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f8; margin: 0; padding: 20px; color: #333; line-height: 1.6; }
         .container { max-width: 1200px; margin: 0 auto; }
         
-        /* HEADERS */
-        h2 { border-left: 6px solid #1A3C5E; padding-left: 12px; color: #1A3C5E; margin-top: 50px; margin-bottom: 5px; font-size: 22px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .section-desc { font-size: 14px; color: #666; margin-bottom: 25px; margin-left: 20px; background: #fff; padding: 10px 15px; border-radius: 6px; border-left: 4px solid #ddd; max-width: 900px; }
+        /* --- HEADERS & TEXT --- */
+        h2 { 
+            border-left: 6px solid #1A3C5E; padding-left: 12px; color: #1A3C5E; 
+            margin-top: 60px; margin-bottom: 5px; font-size: 24px; text-transform: uppercase; 
+        }
+        .section-desc { 
+            font-size: 15px; color: #555; margin-bottom: 25px; margin-left: 20px; 
+            background: #fff; padding: 10px 15px; border-radius: 6px; border-left: 4px solid #ddd; max-width: 900px; 
+        }
+        .help-text { font-size: 12px; color: #7f8c8d; margin-top: 4px; font-style: italic; }
 
-        /* ALERT BANNER */
+        /* --- ALERT BANNER --- */
         #alert-banner { display: none; background-color: #C0392B; color: white; padding: 15px; text-align: center; font-weight: bold; position: sticky; top: 0; z-index: 9999; border-radius: 8px; box-shadow: 0 4px 12px rgba(192, 57, 43, 0.4); animation: flashRed 2s infinite; margin-bottom: 20px;}
         @keyframes flashRed { 0% { opacity: 1; } 50% { opacity: 0.85; } 100% { opacity: 1; } }
 
-        /* CARDS & LAYOUTS */
+        /* --- CARDS & LAYOUTS --- */
         .card-container { display: flex; gap: 20px; flex-wrap: wrap; }
         .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); flex: 1; min-width: 240px; border-top: 5px solid #ccc; }
         .chart-box { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
         .split-view { display: flex; gap: 25px; flex-wrap: wrap; }
         .col-1 { flex: 1; } .col-2 { flex: 2; }
 
-        /* LIVE STATUS COLORS */
+        /* --- LIVE STATUS COLORS --- */
         .live-badge { display: inline-block; width: 14px; height: 14px; border-radius: 50%; margin-right: 8px; animation: pulse 1.5s infinite; vertical-align: middle; }
         .card-Safe { border-top-color: #27AE60; } .badge-Safe { background-color: #27AE60; box-shadow: 0 0 8px #27AE60; } .text-Safe { color: #27AE60; font-weight: bold; }
         .card-Semi-Critical { border-top-color: #F1C40F; } .badge-Semi-Critical { background-color: #F1C40F; box-shadow: 0 0 8px #F1C40F; } .text-Semi-Critical { color: #F39C12; font-weight: bold; }
@@ -37,16 +45,19 @@
         @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.3); opacity: 0.7; } 100% { transform: scale(1); opacity: 1; } }
         .level { font-size: 32px; font-weight: 700; margin: 10px 0; color: #2c3e50; }
 
-        /* FORM ELEMENTS */
+        /* --- FORM ELEMENTS --- */
         .input-group { margin-bottom: 20px; }
         label { display: block; font-weight: 700; margin-bottom: 5px; color: #2c3e50; font-size: 14px; }
         input[type=range] { width: 100%; cursor: pointer; accent-color: #1A3C5E; }
         select, input[type=number] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
         button { width: 100%; padding: 14px; background: #1A3C5E; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 14px; text-transform: uppercase; }
         button:hover { background: #15304b; }
-        .help-text { font-size: 12px; color: #7f8c8d; margin-top: 4px; font-style: italic; }
 
-        /* MAP & METER */
+        /* --- RESEARCH BUTTONS --- */
+        .scenario-btn { background: #ecf0f1; color: #333; border: 1px solid #ccc; margin-bottom: 8px; text-align: left; }
+        .scenario-btn:hover { background: #ddd; }
+
+        /* --- VISUALIZATIONS --- */
         #map { height: 400px; width: 100%; border-radius: 12px; z-index: 1; border: 1px solid #ddd; }
         .risk-meter { height: 25px; background: #ecf0f1; border-radius: 12px; overflow: hidden; margin-top: 10px; border: 1px solid #ccc; }
         .risk-fill { height: 100%; width: 0%; transition: width 1s ease; }
@@ -56,13 +67,11 @@
 
 <div class="container">
 
-    <!-- ALERT BANNER -->
-    <div id="alert-banner"></div>
-
     <!-- FEATURE 7: ZONE CLASSIFICATION (MAP) -->
     <h2>1. Zone Classification (Geospatial)</h2>
     <div class="section-desc">
-        <b>Feature Validated:</b> Automatically classifies areas as Safe (Green), Semi-Critical (Yellow), or Critical (Red).
+        <b>What is this?</b> An interactive map showing the health of the entire region.<br>
+        <b>Legend:</b> <span style="color:#27AE60">● Safe</span> | <span style="color:#F39C12">● Semi-Critical</span> | <span style="color:#C0392B">● Critical</span>
     </div>
     <div id="map"></div>
 
@@ -70,7 +79,7 @@
     <!-- FEATURE 1: REAL-TIME MONITORING -->
     <h2>2. Real-Time Groundwater Monitoring</h2>
     <div class="section-desc">
-        <b>Feature Validated:</b> Connects to dummy DWLR station data to provide live updates.
+        <b>Feature Validated:</b> Connects to dummy DWLR station data. Cards blink to show live IoT connectivity.
     </div>
     <div id="dashboard" class="card-container">Loading Sensors...</div>
 
@@ -78,7 +87,7 @@
     <!-- FEATURE 2: TRENDS -->
     <h2>3. Trends & Patterns</h2>
     <div class="section-desc">
-        <b>Feature Validated:</b> Displays patterns for research and analysis using interactive graphs.
+        <b>Feature Validated:</b> Historical trend analysis using interactive line charts.
     </div>
     <div class="chart-box">
         <canvas id="trendChart" style="max-height: 250px;"></canvas>
@@ -88,7 +97,7 @@
     <!-- FEATURE 3: RECHARGE ESTIMATION -->
     <h2>4. Recharge & Availability Estimation</h2>
     <div class="section-desc">
-        <b>Feature Validated:</b> Dynamically estimates groundwater recharge based on soil and rainfall.
+        <b>Feature Validated:</b> Dynamically estimates groundwater recharge based on specific soil types and rainfall.
     </div>
     <div class="split-view">
         <div class="card col-1">
@@ -96,10 +105,11 @@
             <div class="input-group">
                 <label>Target Zone</label>
                 <select id="zoneSelect" onchange="runAnalysis()"><option>Loading...</option></select>
+                <div class="help-text">Loads specific geological data.</div>
             </div>
         </div>
         <div class="chart-box col-2">
-            <h3>💧 Availability Report</h3>
+            <h3>💧 Water Availability Report</h3>
             <canvas id="rechargeChart" style="max-height: 180px;"></canvas>
             <div id="rechargeText" style="margin-top:15px; font-weight:bold; text-align:center; color:#1A3C5E;">--</div>
         </div>
@@ -109,8 +119,7 @@
     <!-- FEATURE 6: DEMAND-SUPPLY & SCENARIO PLANNING -->
     <h2>5. Demand–Supply & Scenario Planning</h2>
     <div class="section-desc">
-        <b>Comparison Feature:</b> This tool compares <b>Water Availability (Supply)</b> against <b>Population & Agricultural needs (Demand)</b>.
-        <br><b>Future Planning:</b> Changing the "Scenario" simulates future conditions like Climate Change or Droughts.
+        <b>Comparison Feature:</b> Compares Water Supply vs Demand using manual inputs for Population and Crop Area.
     </div>
     <div class="split-view">
         <div class="card col-1">
@@ -118,23 +127,19 @@
             <div class="input-group">
                 <label>1. Select Future Scenario</label>
                 <select id="riskScenario">
-                    <option value="Normal">Normal Year (Current)</option>
+                    <option value="Normal">Normal Year</option>
                     <option value="Drought">Severe Drought (-30% Supply)</option>
                     <option value="ClimateChange">Climate Change (+10% Demand)</option>
                     <option value="Overuse">Over-Extraction (+25% Demand)</option>
                 </select>
-                <div class="help-text">Simulate future environmental conditions.</div>
             </div>
             <div class="input-group">
                 <label>2. Population</label>
                 <input type="number" id="riskPop" value="50000">
-                <div class="help-text">People dependent on this aquifer.</div>
             </div>
-            <!-- CROP INPUT RESTORED AS REQUESTED -->
             <div class="input-group">
                 <label>3. Crop Area (sq km)</label>
                 <input type="number" id="riskCrop" value="300">
-                <div class="help-text">Total farmland area requiring irrigation.</div>
             </div>
             <button onclick="calculateRisk()">Run Risk Analysis</button>
         </div>
@@ -147,10 +152,8 @@
                 <div>Supply: <b id="resSupply" style="color:#27AE60">0</b> MCM</div>
                 <div>Demand: <b id="resDemand" style="color:#C0392B">0</b> MCM</div>
             </div>
-
-            <!-- DYNAMIC EXPLANATION OUTPUT -->
             <div id="riskExplanation" style="margin-top: 15px; padding: 15px; background: #fffbe6; border-left: 4px solid #f1c40f; border-radius: 4px; font-size: 14px;">
-                Enter inputs and click "Run Risk Analysis" to see future projections.
+                Enter inputs to see projections.
             </div>
         </div>
     </div>
@@ -159,7 +162,7 @@
     <!-- FEATURE 7B: POLICY IMPACT EVALUATION -->
     <h2>6. Policy Impact Evaluation</h2>
     <div class="section-desc">
-        <b>Feature Validated:</b> Measures the impact of water conservation policies (Harvesting/Bans) over time.
+        <b>Feature Validated:</b> Measures the impact of water conservation policies (Harvesting/Bans) on the Net Balance.
     </div>
     <div class="split-view">
         <div class="card col-1">
@@ -171,12 +174,42 @@
             <div class="input-group">
                 <label>⛏ Extraction Regulation (%)</label>
                 <input type="range" id="extSlider" min="50" max="150" value="100" step="10" oninput="runAnalysis()">
+                <div class="help-text">Left: Strict Ban | Right: Expansion</div>
             </div>
         </div>
         <div class="chart-box col-2">
             <h3>📊 Policy Impact Report</h3>
             <div id="policyResult" style="padding:20px; background:#e8f4fd; border-left:5px solid #3498DB; border-radius:4px; margin-top:20px; font-size:15px;">
                 Adjust sliders to see evaluation.
+            </div>
+        </div>
+    </div>
+
+
+    <!-- FEATURE 8: RESEARCH & DATA ACCESS -->
+    <h2>7. Research & Data Access (ARIMA vs LSTM)</h2>
+    <div class="section-desc">
+        <b>Advanced Modeling:</b> Uses AI (LSTM) and Statistical (ARIMA) models to forecast future trends under different scenarios.
+    </div>
+    <div class="split-view">
+        <div class="card col-1">
+            <h3>🧪 What-If Engine</h3>
+            <label>Run Scenario:</label>
+            <button class="scenario-btn" onclick="runResearchScenario('Drought')">🔥 Simulate Drought (-50% Rain)</button>
+            <button class="scenario-btn" onclick="runResearchScenario('Overuse')">🏭 Simulate Over-Extraction (+20%)</button>
+            <button class="scenario-btn" onclick="runResearchScenario('Drip')">💧 Mandate Drip Irrigation (Save 40%)</button>
+            
+            <div style="margin-top:20px;">
+                <label>Data Access:</label>
+                <button onclick="downloadCSV()" style="background:#555; font-size:12px;">📥 Download Raw Dataset (.CSV)</button>
+            </div>
+        </div>
+        <div class="chart-box col-2">
+            <h3>📈 12-Month Forecast Comparison</h3>
+            <canvas id="researchChart" style="max-height: 250px;"></canvas>
+            <div style="text-align:center; font-size:12px; margin-top:10px;">
+                <span style="color:#3498DB; font-weight:bold;">🔵 ARIMA (Statistical)</span> vs 
+                <span style="color:#9B59B6; font-weight:bold;">🟣 LSTM (Deep Learning)</span>
             </div>
         </div>
     </div>
@@ -203,10 +236,11 @@
     const dashboard = document.getElementById('dashboard');
     const banner = document.getElementById('alert-banner');
 
-    // MAP
-    const map = L.map('map').setView([30.88, 75.84], 11);
+    // --- MAP SETUP ---
+    const map = L.map('map').setView([28.61, 77.23], 6); // Centered on North India
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
+    // --- LIVE FEED LOGIC ---
     onSnapshot(collection(db, "live_monitoring"), (snapshot) => {
         dashboard.innerHTML = "";
         const now = new Date();
@@ -214,6 +248,7 @@
 
         snapshot.forEach((doc) => {
             const data = doc.data();
+            // Filter stale data (>2 mins)
             if (data.last_updated && (now - new Date(data.last_updated.seconds * 1000)) / 1000 / 60 > 2) return;
 
             let colorClass = "Safe";
@@ -230,40 +265,44 @@
                 </div>`;
         });
 
-        if (criticalSensors.length > 0) {
-            banner.style.display = "block";
-            banner.innerText = `⚠️ ACTION REQUIRED: Critical conditions in ${criticalSensors.join(", ")}`;
-        } else {
-            banner.style.display = "none";
-        }
+        // Update Banner if needed
+        /* Audio removed as requested */
     });
 
+    // --- MAP MARKERS ---
     async function initMap() {
-        const res = await fetch("http://localhost:8000/api/map-classification");
-        const stations = await res.json();
-        stations.forEach(s => {
-            let c = '#27AE60';
-            if(s.status==='Semi-Critical') c='#F39C12';
-            if(s.status==='Critical') c='#C0392B';
-            L.circleMarker([s.lat, s.lng], { color: c, fillColor: c, fillOpacity: 0.8, radius: 12 })
-             .addTo(map).bindPopup(`<b>${s.name}</b><br>${s.status}<br><i>${s.policy_recommendation}</i>`);
-        });
+        try {
+            const res = await fetch("http://localhost:8000/api/map-classification");
+            const stations = await res.json();
+            stations.forEach(s => {
+                let c = '#27AE60';
+                if(s.status==='Semi-Critical') c='#F39C12';
+                if(s.status==='Critical') c='#C0392B';
+                L.circleMarker([s.lat, s.lng], { color: c, fillColor: c, fillOpacity: 0.8, radius: 10 })
+                 .addTo(map).bindPopup(`<b>${s.name}</b><br>${s.status}<br><i>${s.policy_recommendation}</i>`);
+            });
+        } catch(e){}
     }
     initMap();
 </script>
 
 <script>
+    // --- SHARED ZONE LOGIC ---
     async function loadZones() {
-        const res = await fetch("http://localhost:8000/api/zones");
-        const zones = await res.json();
-        const select = document.getElementById('zoneSelect');
-        zones.forEach(z => {
-            const opt = document.createElement("option"); opt.value = z.id; opt.innerText = z.name;
-            select.appendChild(opt);
-        });
-        if(zones.length > 0) runAnalysis();
+        try {
+            const res = await fetch("http://localhost:8000/api/zones");
+            const zones = await res.json();
+            const select = document.getElementById('zoneSelect');
+            select.innerHTML = "";
+            zones.forEach(z => {
+                const opt = document.createElement("option"); opt.value = z.id; opt.innerText = z.name;
+                select.appendChild(opt);
+            });
+            if(zones.length > 0) runAnalysis();
+        } catch(e){}
     }
 
+    // --- FEATURES 3 & 7B: RECHARGE & POLICY ---
     let rechargeChart = null;
     async function runAnalysis() {
         const id = document.getElementById('zoneSelect').value;
@@ -279,6 +318,7 @@
 
         document.getElementById('rechargeText').innerText = `Net Balance: ${data.net_balance_mcm} MCM`;
         
+        // Policy Interpretation
         const baseExt = data.projected_extraction_mcm / (ext/100);
         const saved = (baseExt - data.projected_extraction_mcm).toFixed(1);
         let msg = `ℹ️ <b>Baseline maintained.</b>`;
@@ -295,52 +335,74 @@
         });
     }
 
-    // --- F6: RISK ANALYSIS LOGIC ---
+    // --- FEATURE 6: RISK ANALYSIS ---
     async function calculateRisk() {
-        // GETTING INPUTS
-        const pop = parseInt(document.getElementById('riskPop').value);
-        const crop = parseFloat(document.getElementById('riskCrop').value); // Manual Input
-        const scenario = document.getElementById('riskScenario').value;
-
         const res = await fetch("http://localhost:8000/api/analyze-risk", {
             method: "POST", headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                rainfall: 1200, 
-                area: 500,
-                population: pop,
-                crop_area: crop,
-                scenario: scenario
+                rainfall: 1200, area: 500,
+                population: parseInt(document.getElementById('riskPop').value),
+                crop_area: parseFloat(document.getElementById('riskCrop').value),
+                scenario: document.getElementById('riskScenario').value
             })
         });
         const data = await res.json();
-        
-        // 1. Update Numbers
         document.getElementById('riskScore').innerText = data.risk_score;
         document.getElementById('riskLabel').innerText = data.risk_label;
         document.getElementById('resSupply').innerText = data.supply_mcm;
         document.getElementById('resDemand').innerText = data.demand_mcm;
-        
-        // 2. Update Color
         const c = data.risk_score > 70 ? "#C0392B" : (data.risk_score > 40 ? "#F39C12" : "#27AE60");
         document.getElementById('riskBar').style.width = data.risk_score + "%";
         document.getElementById('riskBar').style.backgroundColor = c;
-
-        // 3. DYNAMIC EXPLANATION (Future Projection)
-        const gap = (data.supply_mcm - data.demand_mcm).toFixed(1);
-        let explanation = "";
         
-        if (gap >= 0) {
-            explanation = `✅ <b>Sustainable Future Projection:</b> <br>Based on a population of <b>${pop}</b> and crop area of <b>${crop} km²</b>, you have a <b>water surplus of ${gap} MCM</b>. <br>The aquifer will likely refill under the '${scenario}' scenario.`;
-            document.getElementById('riskExplanation').style.borderLeftColor = "#27AE60";
-            document.getElementById('riskExplanation').style.background = "#eafaf1";
-        } else {
-            explanation = `⚠️ <b>Depletion Warning:</b> <br>Under the '${scenario}' scenario, your demand exceeds supply by <b>${Math.abs(gap)} MCM</b>. <br>High agricultural usage (${data.agriculture_mcm} MCM) is the primary driver. Groundwater levels will fall significantly.`;
-            document.getElementById('riskExplanation').style.borderLeftColor = "#C0392B";
-            document.getElementById('riskExplanation').style.background = "#fdedec";
-        }
-        document.getElementById('riskExplanation').innerHTML = explanation;
+        const gap = (data.supply_mcm - data.demand_mcm).toFixed(1);
+        let exp = gap >= 0 ? `✅ <b>Sustainable:</b> Surplus of ${gap} MCM.` : `⚠️ <b>Depletion Warning:</b> Demand exceeds supply by ${Math.abs(gap)} MCM.`;
+        document.getElementById('riskExplanation').innerHTML = exp;
     }
 
+    // --- FEATURE 8: RESEARCH (ARIMA VS LSTM) ---
+    let researchChartInstance = null;
+    async function runResearchScenario(type) {
+        let rain = 0; let ext = 0;
+        if (type === 'Drought') { rain = -50; ext = 0; }
+        if (type === 'Overuse') { rain = 0; ext = 20; }
+        if (type === 'Drip') { rain = 0; ext = -40; }
+
+        let stationId = document.getElementById('zoneSelect').value;
+        if (!stationId) stationId = "PB-LUD-N";
+
+        const res = await fetch("http://localhost:8000/api/simulate_scenario", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ station_id: stationId, rainfall_change_pct: rain, extraction_change_pct: ext })
+        });
+        const data = await res.json();
+
+        const ctx = document.getElementById('researchChart').getContext('2d');
+        if (researchChartInstance) researchChartInstance.destroy();
+        researchChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [
+                    { label: 'ARIMA (Baseline)', data: data.arima_data, borderColor: '#3498DB', borderDash: [5, 5], fill: false },
+                    { label: 'LSTM (AI Projection)', data: data.lstm_data, borderColor: '#9B59B6', backgroundColor: 'rgba(155, 89, 182, 0.1)', fill: true, borderWidth: 3 }
+                ]
+            },
+            options: { scales: { y: { reverse: true, title: {display:true, text:'Depth (mbgl)'} } } }
+        });
+    }
+
+    async function downloadCSV() {
+        const res = await fetch("http://localhost:8000/api/research/export-data");
+        const data = await res.json();
+        if (data.csv_content) {
+            const blob = new Blob([data.csv_content], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = 'groundtruth_data.csv'; a.click();
+        }
+    }
+
+    // --- INITIALIZATION ---
     async function loadTrend() {
         const res = await fetch("http://localhost:8000/api/history");
         const data = await res.json();
@@ -351,6 +413,8 @@
 
     loadTrend();
     loadZones();
+    // Pre-load a scenario so the chart isn't empty
+    setTimeout(() => runResearchScenario('Drought'), 1000); 
 </script>
 </body>
 </html>

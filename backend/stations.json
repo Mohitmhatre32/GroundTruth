@@ -2,35 +2,32 @@
     {
         "id": "PB-LUD-N",
         "name": "Ludhiana North - Agri Belt",
-        "lat": 30.9010,
+        "lat": 30.901,
         "lng": 75.8573,
         "base_level_mbgl": 35.5,
+        "status_hint": "Critical",
         "area_sq_km": 450,
-        "infiltration_factor": 0.22,
-        "avg_extraction_mcm": 140,
-        "status_hint": "Critical"
+        "infiltration_factor": 0.15
     },
     {
         "id": "PB-LUD-S",
         "name": "Ludhiana South - Textile Zone",
-        "lat": 30.8600,
-        "lng": 75.8100,
+        "lat": 30.86,
+        "lng": 75.81,
         "base_level_mbgl": 42.1,
-        "area_sq_km": 280,
-        "infiltration_factor": 0.08,
-        "avg_extraction_mcm": 180,
-        "status_hint": "Critical"
+        "status_hint": "Critical",
+        "area_sq_km": 300,
+        "infiltration_factor": 0.08
     },
     {
         "id": "PB-AMR-01",
         "name": "Amritsar Rural Zone",
-        "lat": 31.6340,
+        "lat": 31.634,
         "lng": 74.8723,
         "base_level_mbgl": 24.2,
-        "area_sq_km": 320,
-        "infiltration_factor": 0.20,
-        "avg_extraction_mcm": 110,
-        "status_hint": "Critical"
+        "status_hint": "Critical",
+        "area_sq_km": 500,
+        "infiltration_factor": 0.2
     },
     {
         "id": "PB-PAT-02",
@@ -38,43 +35,39 @@
         "lat": 30.3398,
         "lng": 76.3869,
         "base_level_mbgl": 28.8,
-        "area_sq_km": 150,
-        "infiltration_factor": 0.12,
-        "avg_extraction_mcm": 95,
-        "status_hint": "Critical"
+        "status_hint": "Critical",
+        "area_sq_km": 250,
+        "infiltration_factor": 0.12
     },
     {
         "id": "DL-OKH-01",
-        "name": "Okhla Industrial Area Ph-III",
-        "lat": 28.5300,
-        "lng": 77.2700,
+        "name": "Okhla Ind. Area Ph-III",
+        "lat": 28.53,
+        "lng": 77.27,
         "base_level_mbgl": 55.0,
-        "area_sq_km": 12,
-        "infiltration_factor": 0.05,
-        "avg_extraction_mcm": 200,
-        "status_hint": "Over-Exploited"
+        "status_hint": "Over-Exploited",
+        "area_sq_km": 100,
+        "infiltration_factor": 0.05
     },
     {
         "id": "DL-DWK-02",
         "name": "Dwarka Sector 21",
-        "lat": 28.5600,
-        "lng": 77.0500,
+        "lat": 28.56,
+        "lng": 77.05,
         "base_level_mbgl": 18.5,
-        "area_sq_km": 25,
-        "infiltration_factor": 0.10,
-        "avg_extraction_mcm": 60,
-        "status_hint": "Semi-Critical"
+        "status_hint": "Semi-Critical",
+        "area_sq_km": 120,
+        "infiltration_factor": 0.1
     },
     {
         "id": "DL-YAM-03",
         "name": "Yamuna Flood Plains",
-        "lat": 28.6100,
-        "lng": 77.2800,
+        "lat": 28.61,
+        "lng": 77.28,
         "base_level_mbgl": 4.5,
-        "area_sq_km": 40,
-        "infiltration_factor": 0.35,
-        "avg_extraction_mcm": 20,
-        "status_hint": "Safe"
+        "status_hint": "Safe",
+        "area_sq_km": 80,
+        "infiltration_factor": 0.3
     },
     {
         "id": "DL-CP-04",
@@ -82,10 +75,9 @@
         "lat": 28.6315,
         "lng": 77.2167,
         "base_level_mbgl": 14.2,
-        "area_sq_km": 8,
-        "infiltration_factor": 0.02,
-        "avg_extraction_mcm": 45,
-        "status_hint": "Semi-Critical"
+        "status_hint": "Semi-Critical",
+        "area_sq_km": 50,
+        "infiltration_factor": 0.02
     },
     {
         "id": "RJ-JAI-01",
@@ -93,10 +85,9 @@
         "lat": 26.9124,
         "lng": 75.7873,
         "base_level_mbgl": 48.2,
-        "area_sq_km": 200,
-        "infiltration_factor": 0.15,
-        "avg_extraction_mcm": 110,
-        "status_hint": "Critical"
+        "status_hint": "Critical",
+        "area_sq_km": 400,
+        "infiltration_factor": 0.1
     },
     {
         "id": "RJ-JOD-02",
@@ -104,10 +95,9 @@
         "lat": 26.2389,
         "lng": 73.0243,
         "base_level_mbgl": 62.1,
-        "area_sq_km": 500,
-        "infiltration_factor": 0.40,
-        "avg_extraction_mcm": 80,
-        "status_hint": "Over-Exploited"
+        "status_hint": "Over-Exploited",
+        "area_sq_km": 600,
+        "infiltration_factor": 0.05
     },
     {
         "id": "HR-GUR-01",
@@ -115,10 +105,9 @@
         "lat": 28.4595,
         "lng": 77.0266,
         "base_level_mbgl": 32.8,
-        "area_sq_km": 60,
-        "infiltration_factor": 0.05,
-        "avg_extraction_mcm": 150,
-        "status_hint": "Critical"
+        "status_hint": "Critical",
+        "area_sq_km": 200,
+        "infiltration_factor": 0.05
     },
     {
         "id": "HR-FAR-02",
@@ -126,10 +115,9 @@
         "lat": 28.4089,
         "lng": 77.3178,
         "base_level_mbgl": 19.5,
-        "area_sq_km": 85,
-        "infiltration_factor": 0.10,
-        "avg_extraction_mcm": 90,
-        "status_hint": "Semi-Critical"
+        "status_hint": "Semi-Critical",
+        "area_sq_km": 180,
+        "infiltration_factor": 0.15
     },
     {
         "id": "MH-PUN-01",
@@ -137,10 +125,9 @@
         "lat": 18.5913,
         "lng": 73.7389,
         "base_level_mbgl": 12.5,
-        "area_sq_km": 45,
-        "infiltration_factor": 0.18,
-        "avg_extraction_mcm": 55,
-        "status_hint": "Semi-Critical"
+        "status_hint": "Semi-Critical",
+        "area_sq_km": 150,
+        "infiltration_factor": 0.18
     },
     {
         "id": "MH-LAT-02",
@@ -148,10 +135,9 @@
         "lat": 18.4088,
         "lng": 76.5604,
         "base_level_mbgl": 28.4,
-        "area_sq_km": 300,
-        "infiltration_factor": 0.15,
-        "avg_extraction_mcm": 130,
-        "status_hint": "Critical"
+        "status_hint": "Critical",
+        "area_sq_km": 500,
+        "infiltration_factor": 0.12
     },
     {
         "id": "KA-BLR-01",
@@ -159,10 +145,9 @@
         "lat": 12.8452,
         "lng": 77.6602,
         "base_level_mbgl": 21.5,
-        "area_sq_km": 35,
-        "infiltration_factor": 0.10,
-        "avg_extraction_mcm": 100,
-        "status_hint": "Critical"
+        "status_hint": "Critical",
+        "area_sq_km": 200,
+        "infiltration_factor": 0.1
     },
     {
         "id": "KA-MYS-02",
@@ -170,10 +155,9 @@
         "lat": 12.2958,
         "lng": 76.6394,
         "base_level_mbgl": 8.2,
-        "area_sq_km": 50,
-        "infiltration_factor": 0.25,
-        "avg_extraction_mcm": 30,
-        "status_hint": "Safe"
+        "status_hint": "Safe",
+        "area_sq_km": 150,
+        "infiltration_factor": 0.25
     },
     {
         "id": "TN-CHE-01",
@@ -181,10 +165,9 @@
         "lat": 12.9801,
         "lng": 80.2184,
         "base_level_mbgl": 5.5,
-        "area_sq_km": 40,
-        "infiltration_factor": 0.30,
-        "avg_extraction_mcm": 40,
-        "status_hint": "Safe"
+        "status_hint": "Safe",
+        "area_sq_km": 100,
+        "infiltration_factor": 0.2
     },
     {
         "id": "WB-KOL-01",
@@ -192,10 +175,9 @@
         "lat": 22.5726,
         "lng": 88.4125,
         "base_level_mbgl": 9.2,
-        "area_sq_km": 25,
-        "infiltration_factor": 0.15,
-        "avg_extraction_mcm": 50,
-        "status_hint": "Safe"
+        "status_hint": "Safe",
+        "area_sq_km": 120,
+        "infiltration_factor": 0.15
     },
     {
         "id": "GJ-AHM-01",
@@ -203,10 +185,9 @@
         "lat": 23.0225,
         "lng": 72.5714,
         "base_level_mbgl": 20.9,
-        "area_sq_km": 100,
-        "infiltration_factor": 0.12,
-        "avg_extraction_mcm": 110,
-        "status_hint": "Critical"
+        "status_hint": "Critical",
+        "area_sq_km": 220,
+        "infiltration_factor": 0.1
     },
     {
         "id": "TS-HYD-01",
@@ -214,9 +195,8 @@
         "lat": 17.4435,
         "lng": 78.3772,
         "base_level_mbgl": 16.4,
-        "area_sq_km": 80,
-        "infiltration_factor": 0.05,
-        "avg_extraction_mcm": 95,
-        "status_hint": "Semi-Critical"
+        "status_hint": "Semi-Critical",
+        "area_sq_km": 180,
+        "infiltration_factor": 0.12
     }
 ]

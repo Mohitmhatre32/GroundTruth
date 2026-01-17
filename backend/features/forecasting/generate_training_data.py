@@ -90,10 +90,15 @@ def generate_final_dataset():
     with open('stations.json', 'w') as f:
         json.dump(stations_data, f, indent=4)
 
-    print(f"✅ DONE!")
-    print(f"📊 Rows Created: {len(final_df)}")
-    print(f"📁 Files Created: '{output_file}' and 'stations.json'")
-    print(f"💡 Ready to train your LSTM model now.")
+    # Combine them
+    levels = base_level + trend + seasonality
+
+    # 3. Save to DataFrame
+    df = pd.DataFrame({'ds': dates, 'y': levels})
+    
+    # 4. Export to CSV
+    df.to_csv(CSV_PATH, index=False)
+    print(f"Dummy Training Data Created at: {CSV_PATH}")
 
 if __name__ == "__main__":
     generate_final_dataset()
