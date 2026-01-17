@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useNavigate } from 'react-router-dom';
@@ -36,6 +36,68 @@ interface StationMapProps {
     stations: MapStation[];
 }
 
+// Custom Marker component with hover popup
+const HoverMarker = ({ station, onClick }: { station: MapStation; onClick: () => void }) => {
+    const markerRef = useRef<L.Marker>(null);
+
+    useEffect(() => {
+        const marker = markerRef.current;
+        if (marker) {
+            marker.on('mouseover', () => {
+                marker.openPopup();
+            });
+            marker.on('mouseout', () => {
+                marker.closePopup();
+            });
+        }
+    }, []);
+
+    return (
+        <Marker
+            ref={markerRef}
+            position={[station.lat, station.lng]}
+            icon={createCustomIcon(station.status)}
+            eventHandlers={{
+                click: onClick,
+            }}
+        >
+            <Popup
+                className="custom-hover-popup"
+                closeButton={false}
+                autoPan={false}
+            >
+                <div className="bg-gradient-to-br from-white to-gray-50 rounded-lg shadow-xl border border-gray-200/50 p-4 min-w-[200px]">
+                    <div className="flex items-start justify-between mb-2">
+                        <h3 className="font-bold text-slate-900 text-base">{station.name}</h3>
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${station.status === 'critical' ? 'bg-danger/10 text-danger' :
+                            station.status === 'warning' ? 'bg-warning/10 text-warning' :
+                                'bg-success/10 text-success'
+                            }`}>
+                            {station.status.toUpperCase()}
+                        </span>
+                    </div>
+
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm text-textMuted">Baseline Level:</span>
+                            <span className={`text-lg font-bold ${station.status === 'critical' ? 'text-danger' :
+                                station.status === 'warning' ? 'text-warning' :
+                                    'text-success'
+                                }`}>
+                                {station.waterLevel.toFixed(1)}m
+                            </span>
+                        </div>
+
+                        <div className="pt-2 border-t border-gray-200">
+                            <p className="text-xs text-textMuted italic">Click for detailed analytics</p>
+                        </div>
+                    </div>
+                </div>
+            </Popup>
+        </Marker>
+    );
+};
+
 const StationMap: React.FC<StationMapProps> = ({ stations }) => {
     const navigate = useNavigate();
 
@@ -52,35 +114,29 @@ const StationMap: React.FC<StationMapProps> = ({ stations }) => {
                     url="https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png"
                 />
                 {stations.map(station => (
-                    <Marker
+                    <HoverMarker
                         key={station.id}
-                        position={[station.lat, station.lng]}
-                        icon={createCustomIcon(station.status)}
-                        eventHandlers={{
-                            click: () => {
-                                navigate(`/analytics/${station.id}`);
-                            },
-                        }}
-                    >
-                        <Popup className="custom-popup">
-                            <div className="p-1 min-w-[150px]">
-                                <h3 className="font-bold text-textMain">{station.name}</h3>
-                                <div className="text-sm mt-1">
-                                    <span className="text-textMuted">Level: </span>
-                                    <span className={`font-semibold ${station.status === 'critical' ? 'text-danger' :
-                                        station.status === 'warning' ? 'text-warning' : 'text-success'
-                                        }`}>
-                                        {station.waterLevel.toFixed(1)}m ({station.status})
-                                    </span>
-                                </div>
-                                <div className="text-xs text-textMuted mt-1">
-                                    Click for analytics
-                                </div>
-                            </div>
-                        </Popup>
-                    </Marker>
+                        station={station}
+                        onClick={() => navigate(`/analytics/${station.id}`)}
+                    />
                 ))}
             </MapContainer>
+
+            {/* Custom Styles for Popup */}
+            <style>{`
+                .custom-hover-popup .leaflet-popup-content-wrapper {
+                    padding: 0;
+                    border-radius: 12px;
+                    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+                }
+                .custom-hover-popup .leaflet-popup-content {
+                    margin: 0;
+                    width: auto !important;
+                }
+                .custom-hover-popup .leaflet-popup-tip {
+                    background: white;
+                }
+            `}</style>
         </div>
     );
 };

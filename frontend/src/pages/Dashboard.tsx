@@ -21,7 +21,6 @@ const Dashboard = () => {
     const navigate = useNavigate();
     const [stations, setStations] = useState<MapStation[]>([]);
     const [loading, setLoading] = useState(true);
-    const [criticalAlert, setCriticalAlert] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -43,14 +42,6 @@ const Dashboard = () => {
 
                 setStations(transformedStations);
                 setLoading(false);
-
-                // Alert Logic
-                const critical = transformedStations.filter(s => s.status === 'critical');
-                if (critical.length > 0) {
-                    setCriticalAlert(`⚠️ CRITICAL DEPLETION DETECTED: ${critical.length} Zones Affected`);
-                } else {
-                    setCriticalAlert(null);
-                }
             } catch (error) {
                 console.error('Error fetching stations:', error);
                 toast.error('Failed to load station data');
@@ -91,18 +82,6 @@ const Dashboard = () => {
 
     return (
         <div className="flex flex-col gap-6 min-h-full pb-8">
-            {/* Critical Alert Banner */}
-            {criticalAlert && (
-                <div className="sticky top-0 z-50">
-                    <div className="bg-danger text-white px-6 py-3 rounded-lg shadow-lg font-bold flex items-center justify-between animate-pulse">
-                        <div className="flex items-center gap-3">
-                            <AlertTriangle className="animate-bounce" />
-                            {criticalAlert}
-                        </div>
-                    </div>
-                </div>
-            )}
-
             {/* Top Stats Row */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <StatCard
