@@ -1,0 +1,32 @@
+[
+    {
+        "id": "STN_NORTH",
+        "name": "North District - Agri Zone",
+        "lat": 30.9000,
+        "lng": 75.8500,
+        "base_level_mbgl": 35.5,
+        "area_sq_km": 450,
+        "infiltration_factor": 0.15,
+        "avg_extraction_mcm": 120
+    },
+    {
+        "id": "STN_SOUTH",
+        "name": "South District - Ind. Zone",
+        "lat": 30.8500,
+        "lng": 75.8000,
+        "base_level_mbgl": 15.2,
+        "area_sq_km": 300,
+        "infiltration_factor": 0.08,
+        "avg_extraction_mcm": 90
+    },
+    {
+        "id": "STN_CENTRAL",
+        "name": "Central Zone - Residential",
+        "lat": 30.9100,
+        "lng": 75.8800,
+        "base_level_mbgl": 22.8,
+        "area_sq_km": 150,
+        "infiltration_factor": 0.25,
+        "avg_extraction_mcm": 40
+    }
+]

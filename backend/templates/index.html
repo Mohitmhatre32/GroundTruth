@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GroundTruth Dashboard</title>
+    <!-- Chart.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f4f9; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .section { margin-bottom: 40px; }
+        
+        /* Cards */
+        .card-container { display: flex; gap: 15px; flex-wrap: wrap; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); width: 220px; }
+        .level { font-size: 24px; font-weight: bold; color: #1A3C5E; margin: 10px 0; }
+        
+        /* Badges */
+        .live-badge { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 5px; animation: pulse 1s infinite; }
+        .status-Safe { background-color: #1ABC9C; box-shadow: 0 0 8px #1ABC9C; }
+        .status-Critical { background-color: #E74C3C; box-shadow: 0 0 8px #E74C3C; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        /* Charts & Forms */
+        .chart-box { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .input-group { margin-bottom: 10px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.9em; }
+        input, select { padding: 8px; width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        .split-view { display: flex; gap: 20px; }
+        .half { flex: 1; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <!-- FEATURE 1: REAL-TIME -->
+    <div class="section">
+        <h2>📡 Live Sensor Feed</h2>
+        <div id="dashboard" class="card-container">Loading Sensors...</div>
+    </div>
+
+    <!-- FEATURE 2: FORECASTING -->
+    <div class="section">
+        <h2>📈 Historical Trends (5 Years)</h2>
+        <div class="chart-box">
+            <canvas id="trendChart" style="max-height: 300px;"></canvas>
+        </div>
+    </div>
+
+    <!-- FEATURE 3: ZONE ANALYTICS (Screen 2) -->
+    <div class="section">
+        <h2>📊 Station Analytics & Policy</h2>
+        <div class="split-view">
+            
+            <!-- CONTROLS -->
+            <div class="half card" style="width: auto;">
+                <h3>Select Zone & Scenario</h3>
+                
+                <div class="input-group">
+                    <label>Select Zone (Specific Data)</label>
+                    <select id="zoneSelect" onchange="runAnalysis()">
+                        <option value="" disabled selected>Loading Zones...</option>
+                    </select>
+                </div>
+
+                <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
+                
+                <div class="input-group">
+                    <label>Simulated Rainfall (mm): <span id="rainVal">1200</span></label>
+                    <input type="range" id="rainSlider" min="200" max="2000" value="1200" oninput="document.getElementById('rainVal').innerText = this.value; runAnalysis()">
+                </div>
+
+                <div class="input-group">
+                    <label>Extraction Policy (% of Normal): <span id="extVal">100</span>%</label>
+                    <input type="range" id="extSlider" min="50" max="150" value="100" oninput="document.getElementById('extVal').innerText = this.value; runAnalysis()">
+                    <small style="color: gray;">Slide left to simulate bans.</small>
+                </div>
+            </div>
+
+            <!-- RESULTS VISUALIZATION -->
+            <div class="half chart-box">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 id="resultTitle" style="margin: 0;">Projected Balance</h3>
+                    <div id="healthBadge" style="padding: 5px 10px; border-radius: 4px; color: white; font-weight: bold; font-size: 12px; display: none;"></div>
+                </div>
+                <canvas id="zoneChart"></canvas>
+                <div id="analysisText" style="margin-top: 10px; font-size: 14px; color: #555; line-height: 1.5;"></div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- FIREBASE LOGIC -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+    // Python will inject your keys here
+    const firebaseConfig = {
+        apiKey: "{{ FIREBASE_API_KEY }}",
+        authDomain: "{{ FIREBASE_AUTH_DOMAIN }}",
+        projectId: "{{ FIREBASE_PROJECT_ID }}",
+        storageBucket: "{{ FIREBASE_STORAGE_BUCKET }}",
+        messagingSenderId: "{{ FIREBASE_MESSAGING_SENDER_ID }}",
+        appId: "{{ FIREBASE_APP_ID }}"
+    };
+
+    // Initialize Firebase directly (Removed the problematic "if" check)
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const dashboard = document.getElementById('dashboard');
+
+    onSnapshot(collection(db, "live_monitoring"), (snapshot) => {
+        dashboard.innerHTML = "";
+        
+        // 1. Get current time
+        const now = new Date(); 
+
+        snapshot.forEach((doc) => {
+            const data = doc.data();
+            
+            // 2. Filter: Hide sensors older than 2 minutes
+            // (Firebase Timestamp needs conversion: seconds * 1000)
+            if (data.last_updated) {
+                const lastUpdate = new Date(data.last_updated.seconds * 1000);
+                const diffMinutes = (now - lastUpdate) / 1000 / 60;
+                
+                // If data is older than 2 mins, skip it (It's a Ghost!)
+                if (diffMinutes > 2) return; 
+            }
+
+            const statusClass = data.status === "Critical" ? "status-Critical" : "status-Safe";
+            
+            dashboard.innerHTML += `
+                <div class="card">
+                    <div><span class="live-badge ${statusClass}"></span> ${data.location}</div>
+                    <div class="level">${data.water_level} m</div>
+                    <small>Status: ${data.status || 'Safe'}</small>
+                </div>
+            `;
+        });
+        
+        // 3. Show message if no active sensors found
+        if (dashboard.innerHTML === "") {
+            dashboard.innerHTML = "<p>Waiting for live data...</p>";
+        }
+    });
+</script>
+
+<!-- CHART & ANALYSIS LOGIC -->
+<script>
+    // 1. Load Feature 2 Trend Chart
+    async function loadTrendChart() {
+        try {
+            const response = await fetch("http://localhost:8000/api/history");
+            const data = await response.json();
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(d => d.ds.substring(0, 10)),
+                    datasets: [{
+                        label: 'Depth (mbgl)',
+                        data: data.map(d => d.y),
+                        borderColor: '#1A3C5E',
+                        tension: 0.4, fill: true,
+                        backgroundColor: 'rgba(26, 60, 94, 0.1)'
+                    }]
+                },
+                options: { scales: { y: { reverse: true } } }
+            });
+        } catch(e) { console.error("Trend Chart Error:", e); }
+    }
+
+    // 2. Load Zones & Run Analysis (Feature 3)
+    let zoneChartInstance = null;
+
+    async function loadZones() {
+        try {
+            const response = await fetch("http://localhost:8000/api/zones");
+            const zones = await response.json();
+            const select = document.getElementById('zoneSelect');
+            select.innerHTML = "";
+            
+            zones.forEach(z => {
+                const opt = document.createElement("option");
+                opt.value = z.id;
+                opt.innerText = z.name;
+                select.appendChild(opt);
+            });
+            
+            // Run analysis for the first zone automatically
+            if(zones.length > 0) runAnalysis();
+        } catch (e) { console.error("Zone Load Error", e); }
+    }
+
+    async function runAnalysis() {
+        const stationId = document.getElementById('zoneSelect').value;
+        if (!stationId) return;
+
+        const payload = {
+            station_id: stationId,
+            rainfall: parseFloat(document.getElementById('rainSlider').value),
+            extraction_percent: parseFloat(document.getElementById('extSlider').value)
+        };
+
+        const response = await fetch("http://localhost:8000/api/analyze-zone", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        // Update UI
+        const badge = document.getElementById('healthBadge');
+        badge.style.display = "block";
+        badge.innerText = data.status;
+        badge.style.backgroundColor = data.status === "Sustainable" ? "#1ABC9C" : (data.status === "Stressed" ? "#F1C40F" : "#E74C3C");
+
+        document.getElementById('analysisText').innerHTML = 
+            `<b>${data.zone_name}</b> covers <b>${data.area_sq_km} km²</b>.<br>
+            With <b>${data.rainfall_input_mm}mm</b> rain, we capture <b>${data.estimated_recharge_mcm} MCM</b> (Infiltration: ${data.soil_infiltration}).<br>
+            Net Balance: <b>${data.net_balance_mcm} MCM</b>.`;
+
+        // Update Chart
+        const ctx = document.getElementById('zoneChart').getContext('2d');
+        if (zoneChartInstance) zoneChartInstance.destroy();
+
+        zoneChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Recharge (In)', 'Extraction (Out)'],
+                datasets: [{
+                    label: 'Volume (MCM)',
+                    data: [data.estimated_recharge_mcm, data.projected_extraction_mcm],
+                    backgroundColor: ['#3498DB', '#E74C3C'],
+                    barPercentage: 0.6
+                }]
+            },
+            options: {
+                indexAxis: 'y', 
+                scales: { x: { beginAtZero: true } }
+            }
+        });
+    }
+
+    // Initialize
+    loadTrendChart();
+    loadZones();
+</script>
+
+</body>
+</html>
