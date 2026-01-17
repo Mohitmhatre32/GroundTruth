@@ -1,11 +1,20 @@
-import React from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
     const navigate = useNavigate();
+    const { login, isAuthenticated } = useAuth();
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            navigate('/dashboard');
+        }
+    }, [isAuthenticated, navigate]);
 
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
+        login();
         navigate('/dashboard');
     };
 
@@ -28,6 +37,10 @@ const Login = () => {
                     <button type="submit" className="w-full py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 transition-colors shadow-md">
                         Login to Dashboard
                     </button>
+                    {/* Dummy Login Hint */}
+                    <p className="text-xs text-center text-textMuted mt-4">
+                        (Demo Mode: Click Login to access with dummy credentials)
+                    </p>
                 </form>
             </div>
         </div>
