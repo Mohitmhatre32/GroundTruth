@@ -15,7 +15,8 @@ from config import init_firebase
 from features.monitoring.router import router as monitoring_router
 from features.forecasting.router import router as forecasting_router
 from features.analysis.router import router as analysis_router
-from features.risk.router import router as risk_router  # <--- MAKE SURE THIS IS HERE
+from features.risk.router import router as risk_router
+from features.mobile_api.router import router as mobile_router
 
 BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR / ".env")
@@ -44,6 +45,7 @@ app.include_router(analysis_router, prefix="/api", tags=["Analysis"])
 app.include_router(risk_router, prefix="/api", tags=["Risk"])
 app.include_router(policy_router, prefix="/api", tags=["Policy"])
 app.include_router(research_router, prefix="/api", tags=["Research"])
+app.include_router(mobile_router, prefix="/api/mobile", tags=["Mobile App"])
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
