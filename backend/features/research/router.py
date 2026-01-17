@@ -1,7 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from .service import simulate_scenario_logic
-import os
+from .service import simulate_dual_models # 👈 Updated name
 
 router = APIRouter()
 
@@ -13,7 +12,8 @@ class ScenarioInput(BaseModel):
 @router.post("/simulate_scenario")
 def run_simulation(data: ScenarioInput):
     try:
-        return simulate_scenario_logic(
+        # 👈 Updated function call
+        return simulate_dual_models(
             station_id=data.station_id,
             rain_pct=data.rainfall_change_pct,
             ext_pct=data.extraction_change_pct
@@ -23,12 +23,9 @@ def run_simulation(data: ScenarioInput):
 
 @router.get("/research/export-data")
 def export_research_data():
-    """Allows researchers to download the raw training data"""
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     CSV_PATH = os.path.join(BASE_DIR, "training_data.csv")
-    
     if os.path.exists(CSV_PATH):
         with open(CSV_PATH, 'r') as f:
-            content = f.read()
-        return {"csv_content": content}
+            return {"csv_content": f.read()}
     return {"error": "No data found"}
