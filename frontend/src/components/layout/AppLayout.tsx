@@ -1,8 +1,11 @@
-import React from 'react';
+import { ReactNode } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
 import { LayoutDashboard, LineChart, FlaskConical, Settings, Bell, Search, User, FileText } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 const AppLayout = () => {
+    const { logout, user } = useAuth();
+
     return (
         <div className="flex h-screen bg-transparent font-sans text-textMain overflow-hidden">
             {/* Sidebar with Glass Effect */}
@@ -30,14 +33,16 @@ const AppLayout = () => {
 
                 <div className="p-4 border-t border-gray-100/50 space-y-3">
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">JS</div>
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                            {user?.name ? user.name.charAt(0) : 'U'}
+                        </div>
                         <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-textMain truncate">Jane Smith</p>
-                            <p className="text-xs text-textMuted truncate">Policy Maker</p>
+                            <p className="text-sm font-medium text-textMain truncate">{user?.name || 'User'}</p>
+                            <p className="text-xs text-textMuted truncate">{user?.role || 'Official'}</p>
                         </div>
                     </div>
                     <button
-                        onClick={() => window.location.href = '/login'}
+                        onClick={logout}
                         className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-danger hover:bg-danger/10 rounded-lg transition-colors"
                     >
                         <User size={16} />
@@ -78,7 +83,7 @@ const AppLayout = () => {
     );
 };
 
-const NavItem = ({ to, icon, label }: { to: string, icon: React.ReactNode, label: string }) => {
+const NavItem = ({ to, icon, label }: { to: string, icon: ReactNode, label: string }) => {
     return (
         <NavLink
             to={to}
