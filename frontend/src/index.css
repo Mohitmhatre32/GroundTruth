@@ -1,0 +1,84 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        @apply font-sans text-textMain antialiased;
+        /* User Requested Gradient: Light Blue (#cce3fa) to White to hints of Primary (#027598) */
+        background: radial-gradient(circle at 0% 0%, #cce3fa 0%, transparent 50%),
+            radial-gradient(circle at 100% 100%, rgba(2, 117, 152, 0.1) 0%, transparent 40%),
+            linear-gradient(180deg, #f0f9ff 0%, #ffffff 100%);
+        background-attachment: fixed;
+    }
+}
+
+/* Custom Utilities for "Wow" Effect */
+@layer utilities {
+    .glass {
+        @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-lg;
+    }
+
+    .glass-card {
+        @apply bg-white/80 backdrop-blur-sm border border-white/50 shadow-sm hover:shadow-md transition-all duration-300;
+    }
+
+    .text-gradient {
+        @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-[#014f66];
+    }
+}
+
+/* Animations from previous build */
+@keyframes wave {
+    0% {
+        transform: translateX(0) translateZ(0) scaleY(1);
+    }
+
+    50% {
+        transform: translateX(-25%) translateZ(0) scaleY(0.55);
+    }
+
+    100% {
+        transform: translateX(-50%) translateZ(0) scaleY(1);
+    }
+}
+
+.animate-wave {
+    animation: wave 15s cubic-bezier(0.55, 0.5, 0.45, 0.5) infinite;
+}
+
+@keyframes pulse-fast {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.animate-pulse-fast {
+    animation: pulse-fast 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes marquee {
+    0% {
+        transform: translateX(0%);
+    }
+
+    100% {
+        transform: translateX(-100%);
+    }
+}
+
+.animate-marquee {
+    animation: marquee 25s linear infinite;
+}
