@@ -8,6 +8,7 @@ import Login from './pages/Login';
 import { Toaster } from 'sonner';
 
 import Landing from './pages/Landing';
+import Reports from './pages/Reports';
 
 function App() {
     return (
@@ -18,6 +19,7 @@ function App() {
 
                 <Route element={<AppLayout />}>
                     <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/reports" element={<Reports />} />
                     <Route path="/analytics/:stationId" element={<Analytics />} />
                     <Route path="/simulation" element={<Simulation />} />
                 </Route>
