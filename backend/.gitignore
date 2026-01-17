@@ -1,0 +1,16 @@
+# Security (NEVER commit these)
+serviceAccountKey.json
+.env
+
+# Python / Environment
+venv/
+__pycache__/
+*.pyc
+
+# IDE Settings
+.vscode/
+.idea/
+
+# Data files (Optional: keep these local)
+*.csv
+*.log
