@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import Analytics from './pages/Analytics';
 import Simulation from './pages/Simulation';
 import Login from './pages/Login';
+import Policy from './pages/Policy'; // Import Policy page
 import { Toaster } from 'sonner';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -28,6 +29,7 @@ function App() {
                             <Route path="/real-time" element={<RealTimeCenter />} />
                             <Route path="/reports" element={<Reports />} />
                             <Route path="/analytics" element={<Analytics />} />
+                            <Route path="/policy" element={<Policy />} /> {/* Add Policy route */}
                             <Route path="/simulation" element={<Simulation />} />
                         </Route>
                     </Route>

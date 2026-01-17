@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../utils/app_colors.dart';
 import '../../services/gemini_service.dart';
 import 'package:flutter/scheduler.dart';
@@ -21,6 +22,7 @@ class _JalMitraChatScreenState extends State<JalMitraChatScreen> {
   ];
   bool _isTyping = false;
   final ScrollController _scrollController = ScrollController();
+  final String _currentStationName = "Ludhiana Block A"; // Should come from selected station
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -74,23 +76,18 @@ class _JalMitraChatScreenState extends State<JalMitraChatScreen> {
       ),
       body: Column(
         children: [
-          // Context Header
+          // Sticky Context Header
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            color: AppColors.warningYellow.withAlpha((0.2 * 255).round()),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: AppColors.lightGrey,
             child: Row(
-              children: const [
-                Icon(Icons.warning_amber, color: Colors.orange, size: 20),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Analyzing Data for: Ludhiana (Critical)',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+              children: [
+                const Icon(Icons.location_on, size: 16, color: AppColors.primaryBlue),
+                const SizedBox(width: 8),
+                Text(
+                  'Advising for: $_currentStationName',
+                  style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.primaryBlue),
                 ),
               ],
             ),
@@ -107,46 +104,16 @@ class _JalMitraChatScreenState extends State<JalMitraChatScreen> {
                   return Align(
                     alignment: Alignment.centerLeft,
                     child: Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.lightGrey,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: SizedBox(
-                        width: 40, 
-                        height: 20, 
-                        child: Center(child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryBlue))
+                      margin: const EdgeInsets.only(bottom: 16, left: 8),
+                      child: const Text(
+                        'Jal-Mitra is typing...',
+                        style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
                       ),
                     ),
                   );
                 }
                 final message = _messages[index];
-                return Align(
-                  alignment: message.isUser
-                      ? Alignment.centerRight
-                      : Alignment.centerLeft,
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: message.isUser
-                          ? AppColors.primaryBlue
-                          : AppColors.lightGrey,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    constraints: BoxConstraints(
-                      maxWidth: MediaQuery.of(context).size.width * 0.75,
-                    ),
-                    child: Text(
-                      message.text,
-                      style: TextStyle(
-                        color: message.isUser ? Colors.white : Colors.black,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
-                );
+                return _buildMessageBubble(message);
               },
             ),
           ),
@@ -194,6 +161,7 @@ class _JalMitraChatScreenState extends State<JalMitraChatScreen> {
                         vertical: 12,
                       ),
                     ),
+                    onSubmitted: _sendMessage,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -208,6 +176,30 @@ class _JalMitraChatScreenState extends State<JalMitraChatScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildMessageBubble(ChatMessage message) {
+    return Align(
+      alignment: message.isUser ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: message.isUser ? AppColors.primaryBlue : AppColors.lightGrey,
+          borderRadius: BorderRadius.circular(16).copyWith(
+            bottomRight: message.isUser ? Radius.zero : null,
+            bottomLeft: !message.isUser ? Radius.zero : null,
+          ),
+        ),
+        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+        child: Text(
+          message.text,
+          style: TextStyle(
+            color: message.isUser ? Colors.white : Colors.black87,
+          ),
+        ),
       ),
     );
   }

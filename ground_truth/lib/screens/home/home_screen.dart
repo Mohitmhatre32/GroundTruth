@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/alert_provider.dart';
-import '../../utils/app_colors.dart';
 import 'farmer_home_screen.dart';
 import 'jal_mitra_chat_screen.dart';
 import 'map_nearby_screen.dart';
-import 'alerts_inbox_screen.dart';
+import '../analysis/analysis_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -17,19 +16,20 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
+
   final List<Widget> _screens = [
     const FarmerHomeScreen(),
     const JalMitraChatScreen(),
     const MapNearbyScreen(),
-    const AlertsInboxScreen(),
+    const AnalysisScreen(),
   ];
 
-  final List<String> _labels = ['Home', 'Advisory', 'Map', 'Alerts'];
+  final List<String> _labels = ['Home', 'Advisory', 'Map', 'Analysis'];
   final List<IconData> _icons = [
     Icons.home_outlined,
     Icons.smart_toy_outlined,
     Icons.map_outlined,
-    Icons.notifications_outlined,
+    Icons.analytics_outlined,
   ];
 
   @override
