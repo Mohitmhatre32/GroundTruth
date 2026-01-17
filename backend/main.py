@@ -8,6 +8,7 @@ from fastapi.responses import HTMLResponse
 from dotenv import load_dotenv
 from features.risk.router import router as risk_router
 from features.policy.router import router as policy_router 
+from features.research.router import router as research_router
 
 from config import init_firebase
 # 👇 IMPORT ROUTERS
@@ -42,6 +43,7 @@ app.include_router(forecasting_router, prefix="/api", tags=["Forecasting"])
 app.include_router(analysis_router, prefix="/api", tags=["Analysis"])
 app.include_router(risk_router, prefix="/api", tags=["Risk"])
 app.include_router(policy_router, prefix="/api", tags=["Policy"])
+app.include_router(research_router, prefix="/api", tags=["Research"])
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):

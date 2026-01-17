@@ -28,7 +28,7 @@ def generate_data():
     
     # 4. Export to CSV
     df.to_csv(CSV_PATH, index=False)
-    print(f"✅ Dummy Training Data Created at: {CSV_PATH}")
+    print(f"Dummy Training Data Created at: {CSV_PATH}")
 
 if __name__ == "__main__":
     generate_data()

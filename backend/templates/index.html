@@ -14,13 +14,15 @@
         body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f8; margin: 0; padding: 20px; color: #333; line-height: 1.6; }
         .container { max-width: 1200px; margin: 0 auto; }
         
-        /* HEADERS */
-        h2 { border-left: 6px solid #1A3C5E; padding-left: 12px; color: #1A3C5E; margin-top: 50px; margin-bottom: 5px; font-size: 22px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .section-desc { font-size: 14px; color: #666; margin-bottom: 25px; margin-left: 20px; background: #fff; padding: 10px 15px; border-radius: 6px; border-left: 4px solid #ddd; max-width: 900px; }
-
-        /* ALERT BANNER */
-        #alert-banner { display: none; background-color: #C0392B; color: white; padding: 15px; text-align: center; font-weight: bold; position: sticky; top: 0; z-index: 9999; border-radius: 8px; box-shadow: 0 4px 12px rgba(192, 57, 43, 0.4); animation: flashRed 2s infinite; margin-bottom: 20px;}
-        @keyframes flashRed { 0% { opacity: 1; } 50% { opacity: 0.85; } 100% { opacity: 1; } }
+        /* SECTION HEADERS */
+        h2 { 
+            border-left: 6px solid #1A3C5E; padding-left: 12px; color: #1A3C5E; 
+            margin-top: 60px; margin-bottom: 5px; font-size: 24px; text-transform: uppercase; 
+        }
+        .section-desc { 
+            font-size: 15px; color: #555; margin-bottom: 25px; margin-left: 20px; 
+            background: #fff; padding: 10px 15px; border-radius: 6px; border-left: 4px solid #ddd; max-width: 900px; 
+        }
 
         /* CARDS & LAYOUTS */
         .card-container { display: flex; gap: 20px; flex-wrap: wrap; }
@@ -46,6 +48,11 @@
         button:hover { background: #15304b; }
         .help-text { font-size: 12px; color: #7f8c8d; margin-top: 4px; font-style: italic; }
 
+        /* SCENARIO BUTTONS */
+        .scenario-btn { background: #ecf0f1; color: #333; border: 1px solid #ccc; margin-bottom: 8px; text-align: left; }
+        .scenario-btn:hover { background: #ddd; }
+        .scenario-active { background: #1A3C5E; color: white; border: 1px solid #1A3C5E; }
+
         /* MAP & METER */
         #map { height: 400px; width: 100%; border-radius: 12px; z-index: 1; border: 1px solid #ddd; }
         .risk-meter { height: 25px; background: #ecf0f1; border-radius: 12px; overflow: hidden; margin-top: 10px; border: 1px solid #ccc; }
@@ -56,9 +63,6 @@
 
 <div class="container">
 
-    <!-- ALERT BANNER -->
-    <div id="alert-banner"></div>
-
     <!-- FEATURE 7: ZONE CLASSIFICATION (MAP) -->
     <h2>1. Zone Classification (Geospatial)</h2>
     <div class="section-desc">
@@ -67,10 +71,10 @@
     <div id="map"></div>
 
 
-    <!-- FEATURE 1: REAL-TIME MONITORING -->
+    <!-- FEATURE 1: REAL-TIME MONITORING (NO ALERT BANNER) -->
     <h2>2. Real-Time Groundwater Monitoring</h2>
     <div class="section-desc">
-        <b>Feature Validated:</b> Connects to dummy DWLR station data to provide live updates.
+        <b>Feature Validated:</b> Connects to dummy DWLR station data to provide live updates. Cards blink based on status.
     </div>
     <div id="dashboard" class="card-container">Loading Sensors...</div>
 
@@ -107,10 +111,10 @@
 
 
     <!-- FEATURE 6: DEMAND-SUPPLY & SCENARIO PLANNING -->
-    <h2>5. Demand–Supply & Scenario Planning</h2>
+    <h2>5. Demand–Supply & Risk Analysis</h2>
     <div class="section-desc">
-        <b>Comparison Feature:</b> This tool compares <b>Water Availability (Supply)</b> against <b>Population & Agricultural needs (Demand)</b>.
-        <br><b>Future Planning:</b> Changing the "Scenario" simulates future conditions like Climate Change or Droughts.
+        <b>Comparison Feature:</b> Compares Supply vs Demand. 
+        <br><b>Future Planning:</b> Simulates droughts and climate change impact on risk scores.
     </div>
     <div class="split-view">
         <div class="card col-1">
@@ -123,18 +127,14 @@
                     <option value="ClimateChange">Climate Change (+10% Demand)</option>
                     <option value="Overuse">Over-Extraction (+25% Demand)</option>
                 </select>
-                <div class="help-text">Simulate future environmental conditions.</div>
             </div>
             <div class="input-group">
                 <label>2. Population</label>
                 <input type="number" id="riskPop" value="50000">
-                <div class="help-text">People dependent on this aquifer.</div>
             </div>
-            <!-- CROP INPUT RESTORED AS REQUESTED -->
             <div class="input-group">
                 <label>3. Crop Area (sq km)</label>
                 <input type="number" id="riskCrop" value="300">
-                <div class="help-text">Total farmland area requiring irrigation.</div>
             </div>
             <button onclick="calculateRisk()">Run Risk Analysis</button>
         </div>
@@ -142,15 +142,8 @@
             <h3>Vulnerability Score: <span id="riskScore">--</span>/100</h3>
             <div class="risk-meter"><div id="riskBar" class="risk-fill"></div></div>
             <p id="riskLabel" style="font-weight: bold; margin-top: 8px;">--</p>
-            
-            <div style="display:flex; justify-content:space-around; margin-top:20px; font-size:14px; background:#fafafa; padding:10px; border-radius:8px;">
-                <div>Supply: <b id="resSupply" style="color:#27AE60">0</b> MCM</div>
-                <div>Demand: <b id="resDemand" style="color:#C0392B">0</b> MCM</div>
-            </div>
-
-            <!-- DYNAMIC EXPLANATION OUTPUT -->
             <div id="riskExplanation" style="margin-top: 15px; padding: 15px; background: #fffbe6; border-left: 4px solid #f1c40f; border-radius: 4px; font-size: 14px;">
-                Enter inputs and click "Run Risk Analysis" to see future projections.
+                Enter inputs to see projections.
             </div>
         </div>
     </div>
@@ -180,6 +173,36 @@
             </div>
         </div>
     </div>
+
+
+    <!-- FEATURE 8: RESEARCH & SCENARIO LAB (NEW) -->
+    <h2>8. Research & Scenario Planning Lab</h2>
+    <div class="section-desc">
+        <b>Target Audience:</b> Researchers & Planners.<br>
+        <b>Function:</b> Uses ARIMA/SARIMA logic to forecast "Business As Usual" (BAU) trends vs "Simulated Interventions".
+    </div>
+    <div class="split-view">
+        <div class="card col-1">
+            <h3>🧪 What-If Engine</h3>
+            <label>One-Click Scenarios:</label>
+            <button class="scenario-btn" onclick="runResearchScenario('Drought')">🔥 Simulate Drought (-50% Rain)</button>
+            <button class="scenario-btn" onclick="runResearchScenario('Overuse')">🏭 Simulate Over-Extraction (+20%)</button>
+            <button class="scenario-btn" onclick="runResearchScenario('Drip')">💧 Mandate Drip Irrigation (Save 40%)</button>
+            
+            <div style="margin-top:20px;">
+                <label>Data Access:</label>
+                <button onclick="downloadCSV()" style="background:#555; font-size:12px;">📥 Download Raw Training Data (.CSV)</button>
+            </div>
+        </div>
+        <div class="chart-box col-2">
+            <h3>📈 12-Month Forecast Comparison</h3>
+            <canvas id="researchChart" style="max-height: 250px;"></canvas>
+            <div id="researchLegend" style="text-align:center; font-size:12px; margin-top:10px;">
+                <span style="color:#1A3C5E; font-weight:bold;">🔵 Business As Usual</span> vs 
+                <span style="color:#C0392B; font-weight:bold;">🔴 Simulated Scenario</span>
+            </div>
+        </div>
+    </div>
     
     <div style="height:80px"></div>
 </div>
@@ -201,7 +224,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const dashboard = document.getElementById('dashboard');
-    const banner = document.getElementById('alert-banner');
 
     // MAP
     const map = L.map('map').setView([30.88, 75.84], 11);
@@ -210,15 +232,14 @@
     onSnapshot(collection(db, "live_monitoring"), (snapshot) => {
         dashboard.innerHTML = "";
         const now = new Date();
-        let criticalSensors = [];
 
         snapshot.forEach((doc) => {
             const data = doc.data();
             if (data.last_updated && (now - new Date(data.last_updated.seconds * 1000)) / 1000 / 60 > 2) return;
 
             let colorClass = "Safe";
-            if (data.status === "Critical") { colorClass = "Critical"; criticalSensors.push(data.location); }
-            else if (data.status === "Semi-Critical") { colorClass = "Semi-Critical"; }
+            if (data.status === "Critical") colorClass = "Critical";
+            else if (data.status === "Semi-Critical") colorClass = "Semi-Critical";
 
             dashboard.innerHTML += `
                 <div class="card card-${colorClass}">
@@ -229,13 +250,6 @@
                     <div class="text-${colorClass}" style="font-size:13px;">Status: ${data.status}</div>
                 </div>`;
         });
-
-        if (criticalSensors.length > 0) {
-            banner.style.display = "block";
-            banner.innerText = `⚠️ ACTION REQUIRED: Critical conditions in ${criticalSensors.join(", ")}`;
-        } else {
-            banner.style.display = "none";
-        }
     });
 
     async function initMap() {
@@ -253,6 +267,58 @@
 </script>
 
 <script>
+    // --- FEATURE 8: RESEARCH SCENARIO LOGIC ---
+    let researchChartInstance = null;
+    
+    async function runResearchScenario(type) {
+        let rain = 0;
+        let ext = 0;
+
+        if (type === 'Drought') { rain = -50; ext = 0; }
+        if (type === 'Overuse') { rain = 0; ext = 20; }
+        if (type === 'Drip') { rain = 0; ext = -40; }
+
+        const res = await fetch("http://localhost:8000/api/simulate_scenario", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                station_id: "ALL",
+                rainfall_change_pct: rain,
+                extraction_change_pct: ext
+            })
+        });
+        const data = await res.json();
+
+        // Render Chart
+        const ctx = document.getElementById('researchChart').getContext('2d');
+        if (researchChartInstance) researchChartInstance.destroy();
+        
+        researchChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [
+                    { label: 'Business As Usual (ARIMA)', data: data.bau_data, borderColor: '#1A3C5E', borderDash: [5, 5], fill: false },
+                    { label: 'Simulated Scenario', data: data.simulated_data, borderColor: type === 'Drip' ? '#27AE60' : '#C0392B', fill: false, borderWidth: 3 }
+                ]
+            },
+            options: { scales: { y: { reverse: true, title: {display:true, text:'Depth (m)'} } } }
+        });
+    }
+
+    async function downloadCSV() {
+        const res = await fetch("http://localhost:8000/api/research/export-data");
+        const data = await res.json();
+        if (data.csv_content) {
+            const blob = new Blob([data.csv_content], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'groundtruth_research_data.csv';
+            a.click();
+        } else { alert("Error downloading data"); }
+    }
+
+    // --- OTHER LOGIC (Features 3, 6, 7B) ---
     async function loadZones() {
         const res = await fetch("http://localhost:8000/api/zones");
         const zones = await res.json();
@@ -295,50 +361,27 @@
         });
     }
 
-    // --- F6: RISK ANALYSIS LOGIC ---
     async function calculateRisk() {
-        // GETTING INPUTS
-        const pop = parseInt(document.getElementById('riskPop').value);
-        const crop = parseFloat(document.getElementById('riskCrop').value); // Manual Input
-        const scenario = document.getElementById('riskScenario').value;
-
         const res = await fetch("http://localhost:8000/api/analyze-risk", {
             method: "POST", headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                rainfall: 1200, 
-                area: 500,
-                population: pop,
-                crop_area: crop,
-                scenario: scenario
+                rainfall: 1200, area: 500, population: parseInt(document.getElementById('riskPop').value),
+                crop_area: parseFloat(document.getElementById('riskCrop').value),
+                scenario: document.getElementById('riskScenario').value
             })
         });
         const data = await res.json();
-        
-        // 1. Update Numbers
         document.getElementById('riskScore').innerText = data.risk_score;
         document.getElementById('riskLabel').innerText = data.risk_label;
         document.getElementById('resSupply').innerText = data.supply_mcm;
         document.getElementById('resDemand').innerText = data.demand_mcm;
-        
-        // 2. Update Color
         const c = data.risk_score > 70 ? "#C0392B" : (data.risk_score > 40 ? "#F39C12" : "#27AE60");
         document.getElementById('riskBar').style.width = data.risk_score + "%";
         document.getElementById('riskBar').style.backgroundColor = c;
-
-        // 3. DYNAMIC EXPLANATION (Future Projection)
-        const gap = (data.supply_mcm - data.demand_mcm).toFixed(1);
-        let explanation = "";
         
-        if (gap >= 0) {
-            explanation = `✅ <b>Sustainable Future Projection:</b> <br>Based on a population of <b>${pop}</b> and crop area of <b>${crop} km²</b>, you have a <b>water surplus of ${gap} MCM</b>. <br>The aquifer will likely refill under the '${scenario}' scenario.`;
-            document.getElementById('riskExplanation').style.borderLeftColor = "#27AE60";
-            document.getElementById('riskExplanation').style.background = "#eafaf1";
-        } else {
-            explanation = `⚠️ <b>Depletion Warning:</b> <br>Under the '${scenario}' scenario, your demand exceeds supply by <b>${Math.abs(gap)} MCM</b>. <br>High agricultural usage (${data.agriculture_mcm} MCM) is the primary driver. Groundwater levels will fall significantly.`;
-            document.getElementById('riskExplanation').style.borderLeftColor = "#C0392B";
-            document.getElementById('riskExplanation').style.background = "#fdedec";
-        }
-        document.getElementById('riskExplanation').innerHTML = explanation;
+        const gap = (data.supply_mcm - data.demand_mcm).toFixed(1);
+        let exp = gap >= 0 ? `✅ <b>Sustainable:</b> Surplus of ${gap} MCM.` : `⚠️ <b>Depletion Warning:</b> Demand exceeds supply by ${Math.abs(gap)} MCM.`;
+        document.getElementById('riskExplanation').innerHTML = exp;
     }
 
     async function loadTrend() {
@@ -351,6 +394,8 @@
 
     loadTrend();
     loadZones();
+    // Auto-load a Research Scenario to show the chart immediately
+    runResearchScenario('Drought');
 </script>
 </body>
 </html>
