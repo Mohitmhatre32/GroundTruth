@@ -66,7 +66,7 @@
 <body>
 
 <div class="container">
-
+    
     <!-- FEATURE 7: ZONE CLASSIFICATION (MAP) -->
     <h2>1. Zone Classification (Geospatial)</h2>
     <div class="section-desc">
@@ -215,7 +215,45 @@
     </div>
     
     <div style="height:80px"></div>
-</div>
+    
+    <!-- FEATURE 9: ADVANCED DATA EXPORT CENTER -->
+    <h2>9. Data Export & Professional Reporting</h2>
+    <div class="section-desc">
+        Access official administrative records. Generate high-fidelity PDF reports including AI-based ARIMA/LSTM forecast tables.
+    </div>
+    
+    <div class="split-view" style="margin-bottom: 80px;">
+        
+        <!-- COLUMN A: OVERALL DOWNLOADS -->
+        <div class="card" style="flex: 1;">
+            <h3>📊 Standard Archives</h3>
+            <p class="help-text">Download the entire GroundTruth database (All 20 stations, 5-year daily logs).</p>
+            <button onclick="location.href='/api/export/overall-csv'" style="background:#555;">📥 Download Full CSV (Raw Data)</button>
+            <button onclick="location.href='/api/export/overall-pdf'" style="background:#1A3C5E;">📄 Download Network PDF (Summary)</button>
+        </div>
+
+        <!-- COLUMN B: CUSTOM EXPORT ENGINE -->
+        <div class="card" style="flex: 2;">
+            <h3>🛠️ Custom Export Engine</h3>
+            <div class="split-view">
+                <div style="flex:1">
+                    <label>Station Selection</label>
+                    <select id="rptStn"><option>Loading...</option></select>
+                </div>
+                <div style="flex:1">
+                    <label>Date Range</label>
+                    <input type="date" id="rptStart" value="2023-01-01">
+                    <input type="date" id="rptEnd" value="2023-12-31" style="margin-top:10px">
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button onclick="doCustomExport('csv')" style="background:#27AE60; flex:1">📥 Export Filtered CSV</button>
+                <button onclick="doCustomExport('pdf')" style="background:#E74C3C; flex:1">📄 Generate Custom PDF</button>
+            </div>
+            <div class="help-text">Note: Custom PDFs include 12-month AI trend projections.</div>
+        </div>
+    </div>
 
 <!-- JAVASCRIPT LOGIC -->
 <script type="module">
@@ -415,6 +453,84 @@
     loadZones();
     // Pre-load a scenario so the chart isn't empty
     setTimeout(() => runResearchScenario('Drought'), 1000); 
+
+    // Populate the single-select dropdown
+    async function populateSingleDropdown() {
+        const res = await fetch("http://localhost:8000/api/zones");
+        const zones = await res.json();
+        const select = document.getElementById('reportStationSingle');
+        select.innerHTML = "";
+        zones.forEach(z => {
+            const opt = document.createElement("option");
+            opt.value = z.id;
+            opt.innerText = z.name;
+            select.appendChild(opt);
+        });
+    }
+    populateSingleDropdown();
+
+    // PDF Export
+    async function generateCustomReport() {
+        const stationId = document.getElementById('reportStationSingle').value;
+        const payload = {
+            station_id: stationId,
+            start_date: document.getElementById('reportStart').value,
+            end_date: document.getElementById('reportEnd').value
+        };
+
+        const response = await fetch("http://localhost:8000/api/download-custom-report", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${stationId}_Report.pdf`;
+            a.click();
+        }
+    }
+
+    // CSV Full Export
+    async function downloadStationCSV() {
+        const stationId = document.getElementById('reportStationSingle').value;
+        if(!stationId) return alert("Select a station first");
+        window.location.href = `http://localhost:8000/api/download-full-csv/${stationId}`;
+    }
+    async function loadRptStations() {
+        const res = await fetch("http://localhost:8000/api/zones");
+        const zones = await res.json();
+        const sel = document.getElementById('rptStn'); sel.innerHTML = "";
+        zones.forEach(z => { sel.innerHTML += `<option value="${z.id}">${z.name}</option>`; });
+    }
+    loadRptStations();
+
+    async function doCustomExport(mode) {
+        const payload = {
+            station_id: document.getElementById('rptStn').value,
+            start: document.getElementById('rptStart').value,
+            end: document.getElementById('rptEnd').value
+        };
+
+        const endpoint = mode === 'csv' ? '/api/export/custom-csv' : '/api/export/custom-pdf';
+        
+        const response = await fetch("http://localhost:8000" + endpoint, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `GroundTruth_${payload.station_id}.${mode}`;
+            a.click();
+        } else { alert("Export failed. Ensure data exists for selected range."); }
+    }
 </script>
 </body>
 </html>
