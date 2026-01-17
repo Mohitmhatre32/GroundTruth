@@ -5,6 +5,7 @@ import 'firebase_options.dart';
 import 'services/api_service.dart';
 import 'services/alert_polling_service.dart';
 import 'services/location_service.dart';
+import 'services/fcm_service.dart';
 import 'providers/auth_provider.dart';
 import 'providers/alert_provider.dart';
 import 'providers/location_provider.dart';
@@ -12,6 +13,7 @@ import 'providers/station_provider.dart';
 import 'utils/theme.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/home/home_screen.dart';
+import 'screens/analysis/analysis_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,6 +30,14 @@ void main() async {
     );
   } catch (e) {
     print('Firebase initialization error: $e');
+  }
+
+  // Initialize FCM Service for background token refresh
+  try {
+    final fcmService = FCMService();
+    await fcmService.initialize();
+  } catch (e) {
+    print('FCM Service initialization error: $e');
   }
 
   runApp(const GroundTruthApp());
@@ -80,6 +90,7 @@ class GroundTruthApp extends StatelessWidget {
               '/home': (_) => const HomeScreen(),
               '/login': (_) => const LoginScreen(),
               '/settings': (_) => const SettingsScreen(),
+              '/analysis': (_) => const AnalysisScreen(),
               '/signup': (_) => const SignupScreen(),
             },
           );

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/alert.dart';
 import '../services/alert_polling_service.dart';
-import '../utils/constants.dart';
 
 class AlertProvider extends ChangeNotifier {
   final AlertPollingService pollingService;

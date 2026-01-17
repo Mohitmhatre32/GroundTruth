@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:provider/provider.dart';
+import 'package:geolocator/geolocator.dart';
+import '../../services/api_service.dart';
+import '../../services/location_service.dart';
 import '../../utils/app_colors.dart';
 
 class MapNearbyScreen extends StatefulWidget {
@@ -13,12 +17,13 @@ class MapNearbyScreen extends StatefulWidget {
 
 class _MapNearbyScreenState extends State<MapNearbyScreen> {
   late MapController _mapController;
-  final LatLng _userLocation = const LatLng(30.9010, 75.8573); // Ludhiana
+  LatLng _userLocation = const LatLng(20.5937, 78.9629); // Default India center
+  List<WellMarker> _wells = [];
+  bool _isLoading = true;
 
   // State variables for enhancements
   bool _isSatellite = false;
   bool _isSearching = false;
-  bool _isLoading = false;
   final TextEditingController _searchController = TextEditingController();
 
   Future<void> _searchLocation(String query) async {
@@ -58,53 +63,107 @@ class _MapNearbyScreenState extends State<MapNearbyScreen> {
     }
   }
 
-  final List<WellMarker> _wells = [
-    WellMarker(
-      id: 'user_location',
-      location: const LatLng(30.9010, 75.8573),
-      title: 'Your Location',
-      wellId: 'YOU',
-      distance: '0km',
-      depth: '-',
-      status: 'current',
-      color: AppColors.primaryBlue,
-    ),
-    WellMarker(
-      id: 'well_1',
-      location: const LatLng(30.9050, 75.8600),
-      title: 'Safe Well - 0.5km',
-      wellId: 'WL-001',
-      distance: '0.5km',
-      depth: '35m',
-      status: 'safe',
-      color: AppColors.safeGreen,
-    ),
-    WellMarker(
-      id: 'well_2',
-      location: const LatLng(30.8970, 75.8550),
-      title: 'Semi-Critical Well - 1.2km',
-      wellId: 'WL-002',
-      distance: '1.2km',
-      depth: '28m',
-      status: 'semi',
-      color: AppColors.warningYellow,
-    ),
-    WellMarker(
-      id: 'well_3',
-      location: const LatLng(30.8930, 75.8500),
-      title: 'Critical Well - 2km',
-      wellId: 'WL-003',
-      distance: '2km',
-      depth: '15m',
-      status: 'critical',
-      color: Colors.red,
-    ),
-  ];
+  Future<void> _initMapData() async {
+    try {
+      // 0. Check Internet
+      final hasInternet = await context.read<ApiService>().checkInternet();
+      if (!hasInternet) {
+        if(mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No Internet Connection. Please enable mobile data or Wifi.')),
+          );
+        }
+        // Proceeding anyway but API calls might fail
+      }
+
+      // 1. Get User Location (Using robust LocationService)
+      // Note: We need to import LocationService
+      final position = await context.read<LocationService>().getCurrentLocation();
+      
+      if (position == null) {
+          if(mounted) {
+             ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Location Permission/Service Required.')),
+            );
+          }
+          // Default location
+      } else {
+        setState(() {
+          _userLocation = LatLng(position.latitude, position.longitude);
+          _isLoading = true;
+        });
+        // Move map to user
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+           _mapController.move(_userLocation, 14);
+        });
+      }
+
+      // 2. Get Stations form API
+      final stations = await context.read<ApiService>().getStations();
+      
+      // 3. Convert to Markers
+      final markers = stations.map((s) {
+        final loc = LatLng(s['latitude'], s['longitude']);
+        double dist = 0;
+        if (position != null) {
+           dist = Geolocator.distanceBetween(
+             position.latitude, position.longitude, 
+             loc.latitude, loc.longitude
+           );
+        }
+        
+        return WellMarker(
+          id: s['id'],
+          location: loc,
+          title: s['name'],
+          wellId: s['id'],
+          distance: '${(dist/1000).toStringAsFixed(1)}km',
+          depth: '${s['current_depth_m']}m',
+          status: s['status'],
+          color: _getStatusColor(s['status']),
+        );
+      }).toList();
+
+      // Add User Marker if we have location
+      if (position != null) {
+        markers.add(WellMarker(
+          id: 'user',
+          location: _userLocation,
+          title: 'You are here',
+          wellId: 'ME',
+          distance: '0km',
+          depth: '-',
+          status: 'current',
+          color: AppColors.primaryBlue,
+        ));
+      }
+
+      setState(() {
+        _wells = markers;
+        _isLoading = false;
+      });
+
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+  
+  Color _getStatusColor(String status) {
+    if (status == 'Safe') return AppColors.safeGreen;
+    if (status == 'Critical') return Colors.red;
+    return AppColors.warningYellow;
+  }
+  
+  // Removed local _determinePosition as we use LocationService now
 
   @override
   void initState() {
     super.initState();
     _mapController = MapController();
+    _initMapData();
   }
 
   @override
@@ -406,11 +465,109 @@ class _MapNearbyScreenState extends State<MapNearbyScreen> {
   }
 
   void _showWellDetails(WellMarker well) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${well.title} - ${well.wellId}'),
-        duration: const Duration(seconds: 2),
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        well.title,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        'ID: ${well.wellId}',
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: well.color.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: well.color),
+                    ),
+                    child: Text(
+                      well.status.toUpperCase(),
+                      style: TextStyle(
+                        color: well.color,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                   Expanded(
+                     child: _buildDetailItem(Icons.water_drop, 'Depth', well.depth),
+                   ),
+                   Expanded(
+                     child: _buildDetailItem(Icons.nature, 'Region', 'North'),
+                   ),
+                ],
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context); // Close sheet
+                     Navigator.of(context).popUntil((route) => route.isFirst); // Go to Home
+                     // This is a hacky way to try to switch tabs, better to just push the screen for now
+                     // Provider.of<NavigationProvider>(context, listen: false).setTab(3); 
+                     
+                     // Simpler approach: Show a SnackBar saying "Go to Analysis Tab" or push the screen
+                     // Pushing AnalysisScreen directly
+                     // We need to fix imports first, but assuming we can:
+                     // Navigator.push(context, MaterialPageRoute(builder: (_) => const AnalysisScreen()));
+                     
+                     // For this interaction to be smooth, let's just show a message or valid navigation if imports allowed.
+                     // We will assume the user manually goes there or implementing proper routing later.
+                     // Let's just Push the Analysis Screen to be safe/clear.
+                     Navigator.pushNamed(context, '/analysis'); 
+                  },
+                  icon: const Icon(Icons.analytics),
+                  label: const Text('Predict Future Scenario'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryBlue,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDetailItem(IconData icon, String label, String value) {
+    return Column(
+      children: [
+        Icon(icon, color: Colors.grey, size: 28),
+        const SizedBox(height: 8),
+        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+        Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+      ],
     );
   }
 
