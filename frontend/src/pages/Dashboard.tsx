@@ -1,53 +1,76 @@
 
 import React, { useEffect, useState } from 'react';
-import { MockDataService, Station, Alert } from '../services/mockDataService';
 import { useNavigate } from 'react-router-dom';
 import { Activity, AlertTriangle, Droplets, AreaChart, FileText } from 'lucide-react';
 import StationMap from '../components/map/StationMap';
 import { toast } from 'sonner';
+import { getMapClassification, ClassificationResult } from '../services/api';
+
+// Convert API Station to Map Station format
+interface MapStation {
+    id: string;
+    name: string;
+    location: string;
+    waterLevel: number;
+    status: 'safe' | 'warning' | 'critical';
+    lat: number;
+    lng: number;
+}
 
 const Dashboard = () => {
     const navigate = useNavigate();
-    const [stations, setStations] = useState<Station[]>([]);
+    const [stations, setStations] = useState<MapStation[]>([]);
     const [loading, setLoading] = useState(true);
     const [criticalAlert, setCriticalAlert] = useState<string | null>(null);
-    const [alerts, setAlerts] = useState<Alert[]>([]);
 
     useEffect(() => {
         const fetchData = async () => {
-            const data = await MockDataService.getStations();
-            setStations(data);
-            setLoading(false);
+            try {
+                // Fetch real data from backend
+                const data: ClassificationResult[] = await getMapClassification();
 
-            // Alert Logic
-            const critical = data.filter(s => s.status === 'critical');
-            if (critical.length > 0) {
-                setCriticalAlert(`⚠️ CRITICAL DEPLETION DETECTED: ${critical.length} Zones Affected`);
-
-                // Generate alerts for ticker
-                const newAlerts = critical.map(s => ({
-                    id: `alert-${s.id}`,
-                    stationId: s.id,
-                    message: `CRITICAL LEVEL: ${s.location} dropped below safe limit! Current: ${s.waterLevel}m`,
-                    severity: 'critical' as const,
-                    timestamp: new Date().toISOString()
+                // Transform API data to component format
+                const transformedStations: MapStation[] = data.map(station => ({
+                    id: station.id,
+                    name: station.name,
+                    location: station.name,
+                    waterLevel: station.baseline_level,
+                    status: station.status === 'Safe' ? 'safe' :
+                        station.status === 'Semi-Critical' ? 'warning' : 'critical',
+                    lat: station.lat,
+                    lng: station.lng
                 }));
-                setAlerts(newAlerts);
-            } else {
-                setCriticalAlert(null);
-                setAlerts([]);
+
+                setStations(transformedStations);
+                setLoading(false);
+
+                // Alert Logic
+                const critical = transformedStations.filter(s => s.status === 'critical');
+                if (critical.length > 0) {
+                    setCriticalAlert(`⚠️ CRITICAL DEPLETION DETECTED: ${critical.length} Zones Affected`);
+                } else {
+                    setCriticalAlert(null);
+                }
+            } catch (error) {
+                console.error('Error fetching stations:', error);
+                toast.error('Failed to load station data');
+                setLoading(false);
             }
         };
 
         fetchData();
-        const interval = setInterval(fetchData, 10000);
+        const interval = setInterval(fetchData, 30000); // Refresh every 30s
         return () => clearInterval(interval);
     }, []);
 
     const stats = {
         totalStations: stations.length,
         criticalCount: stations.filter(s => s.status === 'critical').length,
-        avgLevel: (stations.reduce((acc, s) => acc + s.waterLevel, 0) / (stations.length || 1)).toFixed(1)
+        warningCount: stations.filter(s => s.status === 'warning').length,
+        safeCount: stations.filter(s => s.status === 'safe').length,
+        avgLevel: stations.length > 0
+            ? (stations.reduce((acc, s) => acc + s.waterLevel, 0) / stations.length).toFixed(1)
+            : '0.0'
     };
 
     const handleDownloadReport = () => {
@@ -55,29 +78,28 @@ const Dashboard = () => {
         navigate('/reports');
     };
 
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p className="text-textMuted">Loading dashboard...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="flex flex-col gap-6 min-h-full pb-8">
-            {/* Sticky Alert & Ticker */}
+            {/* Critical Alert Banner */}
             {criticalAlert && (
-                <div className="sticky top-0 z-50 flex flex-col gap-2">
+                <div className="sticky top-0 z-50">
                     <div className="bg-danger text-white px-6 py-3 rounded-lg shadow-lg font-bold flex items-center justify-between animate-pulse">
                         <div className="flex items-center gap-3">
                             <AlertTriangle className="animate-bounce" />
                             {criticalAlert}
                         </div>
                     </div>
-                    {alerts.length > 0 && (
-                        <div className="bg-danger/10 border border-danger/20 p-2 rounded-lg flex items-center overflow-hidden whitespace-nowrap">
-                            <span className="font-bold text-danger text-xs uppercase px-2">LIVE:</span>
-                            <div className="animate-marquee inline-block">
-                                {alerts.map(a => (
-                                    <span key={a.id} className="text-sm text-danger mr-8 font-medium">
-                                        {a.message} ({new Date(a.timestamp).toLocaleTimeString()})
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-                    )}
                 </div>
             )}
 
@@ -92,8 +114,8 @@ const Dashboard = () => {
                     title="Avg Water Level"
                     value={`${stats.avgLevel}m`}
                     icon={<Droplets className="text-primary" />}
-                    subValue="-0.5m vs last year"
-                    subColor="text-danger"
+                    subValue={`${stats.safeCount} safe zones`}
+                    subColor="text-success"
                 />
                 <StatCard
                     title="Critical Zones"
@@ -102,15 +124,15 @@ const Dashboard = () => {
                     highlight="danger"
                 />
                 <StatCard
-                    title="Est. Recharge"
-                    value="45%"
-                    icon={<AreaChart className="text-success" />}
-                    subValue="On track"
-                    subColor="text-success"
+                    title="Warning Zones"
+                    value={stats.warningCount.toString()}
+                    icon={<AreaChart className="text-warning" />}
+                    subValue={stats.warningCount > 0 ? "Needs attention" : "All clear"}
+                    subColor={stats.warningCount > 0 ? "text-warning" : "text-success"}
                 />
             </div>
 
-            {/* Main Content: Map Only */}
+            {/* Main Content: Map */}
             <div className="h-[600px] bg-white p-1 rounded-xl shadow-sm border border-gray-100 relative flex flex-col">
                 <div className="absolute top-4 right-4 z-[400]">
                     <button
@@ -144,7 +166,16 @@ const Dashboard = () => {
     );
 };
 
-const StatCard = ({ title, value, icon, subValue, subColor, highlight }: any) => (
+interface StatCardProps {
+    title: string;
+    value: string;
+    icon: React.ReactNode;
+    subValue?: string;
+    subColor?: string;
+    highlight?: 'danger';
+}
+
+const StatCard = ({ title, value, icon, subValue, subColor, highlight }: StatCardProps) => (
     <div className={`p-4 rounded-xl shadow-sm border border-gray-100 bg-white flex items-start justify-between ${highlight === 'danger' ? 'ring-1 ring-danger/30 bg-danger/5' : ''}`}>
         <div>
             <p className="text-xs font-medium text-textMuted uppercase tracking-wider">{title}</p>
@@ -160,3 +191,4 @@ const StatCard = ({ title, value, icon, subValue, subColor, highlight }: any) =>
 );
 
 export default Dashboard;
+
