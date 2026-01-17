@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import '../utils/constants.dart';
 
 class ApiService {
@@ -166,6 +167,31 @@ class ApiService {
     String? area,
     int limit = 20,
   }) async {
+    // Mocking Alerts for Demo
+    await Future.delayed(const Duration(seconds: 1));
+    return {
+      'results': [
+        {
+          'id': '1',
+          'title': 'Critical Water Level',
+          'message': 'Water level in Ludhiana zone has dropped below 30m.',
+          'severity': 'CRITICAL',
+          'timestamp': DateTime.now().toIso8601String(),
+          'is_read': false,
+        },
+        {
+          'id': '2',
+          'title': 'Rainfall Forecast',
+          'message': 'Heavy rainfall expected in next 48 hours. Opportunity for harvesting.',
+          'severity': 'MEDIUM',
+          'timestamp': DateTime.now().subtract(const Duration(hours: 5)).toIso8601String(),
+          'is_read': true,
+        },
+      ]
+    };
+
+    /* 
+    // Real API Call
     try {
       final response = await _dio.get(
         '/notify/alerts/',
@@ -179,46 +205,40 @@ class ApiService {
     } on DioException catch (e) {
       throw _handleError(e);
     }
+    */
   }
 
-  // Verification Endpoints
-  Future<Map<String, dynamic>> submitVerification({
-    required String stationId,
-    required double value,
-    required Map<String, dynamic> location,
-    String? photoUrl,
-    String? notes,
-  }) async {
+  // Analysis Endpoints
+  // Mobile API - Screen 1: Dashboard & Screen 3: Map
+    Future<List<Map<String, dynamic>>> getStations() async {
     try {
-      final response = await _dio.post(
-        '/verify/submit/',
-        data: {
-          'station_id': stationId,
-          'value': value,
-          'location': location,
-          'photo_url': photoUrl,
-          'notes': notes,
-        },
-      );
-      return response.data as Map<String, dynamic>;
-    } on DioException catch (e) {
-      throw _handleError(e);
+      final response = await _dio.get('/mobile/stations');
+      return List<Map<String, dynamic>>.from(response.data);
+    } catch (e) {
+      print("API Error: $e");
+      // Fallback to mock if API fails for demo stability
+      return [
+        {
+          "id": "STN_MOCK_1",
+          "name": "Demo Station (Offline)",
+          "latitude": 30.9010,
+          "longitude": 75.8573,
+          "current_depth_m": 25.0,
+          "status": "Semi-Critical",
+          "region": "North India"
+        }
+      ];
     }
   }
 
-  Future<Map<String, dynamic>> getVerifications({int limit = 50}) async {
-    try {
-      final response = await _dio.get(
-        '/verify/submissions/',
-        queryParameters: {'limit': limit},
-      );
-      return response.data as Map<String, dynamic>;
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
-  }
+
 
   // Helper Methods
+  Future<bool> checkInternet() async {
+    final connectivityResult = await (Connectivity().checkConnectivity());
+    return connectivityResult != ConnectivityResult.none;
+  }
+
   String _handleError(DioException error) {
     if (error.type == DioExceptionType.connectionTimeout ||
         error.type == DioExceptionType.receiveTimeout) {

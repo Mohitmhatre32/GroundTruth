@@ -19,7 +19,7 @@ class LocationService {
   Stream<Station?> get nearestStationStream => _nearestStationController.stream;
 
   Position? _currentPosition;
-
+  
   Future<bool> requestLocationPermission() async {
     final permission = await Geolocator.checkPermission();
     
@@ -27,7 +27,7 @@ class LocationService {
       final result = await Geolocator.requestPermission();
       return result != LocationPermission.denied && result != LocationPermission.deniedForever;
     } else if (permission == LocationPermission.deniedForever) {
-      await Geolocator.openLocationSettings();
+      // We can't request again, but we return false so caller knows
       return false;
     }
     return true;
@@ -35,15 +35,36 @@ class LocationService {
 
   Future<Position?> getCurrentLocation() async {
     try {
-      final hasPermission = await requestLocationPermission();
-      if (!hasPermission) return null;
+      // 1. Check Service
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        // Option: Show dialog to user? 
+        // For now, we try to open settings or return error
+         await Geolocator.openLocationSettings();
+         // Check again
+         serviceEnabled = await Geolocator.isLocationServiceEnabled();
+         if (!serviceEnabled) return null;
+      }
 
-      final position = await Geolocator.getCurrentPosition(
+      // 2. Check Permission
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          return null; // Permission denied
+        }
+      }
+      
+      if (permission == LocationPermission.deniedForever) {
+        // Sent to settings
+        await Geolocator.openAppSettings();
+        return null; // Cannot continue
+      }
+
+      // 3. Get Position
+      return await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
-      _currentPosition = position;
-      _positionStreamController.add(position);
-      return position;
     } catch (e) {
       print('Error getting location: $e');
       return null;

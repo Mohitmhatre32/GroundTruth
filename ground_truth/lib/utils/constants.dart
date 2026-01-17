@@ -1,7 +1,8 @@
 class AppConstants {
   // API Configuration
-  // For Android emulator, use 10.0.2.2 to access localhost on the host machine
-  static const String apiBaseUrl = 'http://10.0.2.2:8000/api';
+  // API Configuration
+  // For Physical Device: 192.168.1.104 detected.
+  static const String apiBaseUrl = 'http://localhost:8000/api'; 
   static const int apiTimeoutSeconds = 30;
   static const String geminiApiKey = 'AIzaSyBSWirTl10hYrwwfZcSYZ0zvoeslhMKDWg'; // TODO: Replace with your actual Gemini API Key
 
