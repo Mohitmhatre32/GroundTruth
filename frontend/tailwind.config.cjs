@@ -9,7 +9,7 @@ module.exports = {
       colors: {
         primary: '#027598',     // Deep Soft Teal-Blue (Headers/Nav/Active States)
         secondary: '#dbb432',   // Dark Mustard Yellow (Highlights/Accents)
-        background: '#F3F5F7',  // Soft Grey (Global Background)
+        background: '#cce3faff',  // Soft Grey (Global Background)
         surface: '#FFFFFF',     // Cards / Panels / Modals
         textMain: '#243A40',    // Main Headings
         textMuted: '#6B7C83',   // Subtitles / Meta data

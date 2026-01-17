@@ -1,0 +1,489 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:geocoding/geocoding.dart';
+import '../../utils/app_colors.dart';
+
+class MapNearbyScreen extends StatefulWidget {
+  const MapNearbyScreen({super.key});
+
+  @override
+  State<MapNearbyScreen> createState() => _MapNearbyScreenState();
+}
+
+class _MapNearbyScreenState extends State<MapNearbyScreen> {
+  late MapController _mapController;
+  final LatLng _userLocation = const LatLng(30.9010, 75.8573); // Ludhiana
+
+  // State variables for enhancements
+  bool _isSatellite = false;
+  bool _isSearching = false;
+  bool _isLoading = false;
+  final TextEditingController _searchController = TextEditingController();
+
+  Future<void> _searchLocation(String query) async {
+    if (query.isEmpty) return;
+    
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      List<Location> locations = await locationFromAddress(query);
+      if (locations.isNotEmpty) {
+        Location loc = locations.first;
+        LatLng newPos = LatLng(loc.latitude, loc.longitude);
+         // Optionally confirm with user or just fly there
+        _mapController.move(newPos, 14);
+      } else {
+        if(mounted) {
+           ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Location not found')),
+          );
+        }
+      }
+    } catch (e) {
+      if(mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error finding location: $e')),
+        );
+      }
+    } finally {
+      if(mounted) {
+        setState(() {
+          _isLoading = false;
+          _isSearching = false; // Close search bar usually
+        });
+      }
+    }
+  }
+
+  final List<WellMarker> _wells = [
+    WellMarker(
+      id: 'user_location',
+      location: const LatLng(30.9010, 75.8573),
+      title: 'Your Location',
+      wellId: 'YOU',
+      distance: '0km',
+      depth: '-',
+      status: 'current',
+      color: AppColors.primaryBlue,
+    ),
+    WellMarker(
+      id: 'well_1',
+      location: const LatLng(30.9050, 75.8600),
+      title: 'Safe Well - 0.5km',
+      wellId: 'WL-001',
+      distance: '0.5km',
+      depth: '35m',
+      status: 'safe',
+      color: AppColors.safeGreen,
+    ),
+    WellMarker(
+      id: 'well_2',
+      location: const LatLng(30.8970, 75.8550),
+      title: 'Semi-Critical Well - 1.2km',
+      wellId: 'WL-002',
+      distance: '1.2km',
+      depth: '28m',
+      status: 'semi',
+      color: AppColors.warningYellow,
+    ),
+    WellMarker(
+      id: 'well_3',
+      location: const LatLng(30.8930, 75.8500),
+      title: 'Critical Well - 2km',
+      wellId: 'WL-003',
+      distance: '2km',
+      depth: '15m',
+      status: 'critical',
+      color: Colors.red,
+    ),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _mapController = MapController();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      extendBodyBehindAppBar: true, // Make map fill screen
+      appBar: AppBar(
+        title: _isSearching
+            ? TextField(
+                controller: _searchController,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: 'Search location...',
+                  border: InputBorder.none,
+                  hintStyle: TextStyle(color: Colors.white70),
+                ),
+                style: TextStyle(color: Colors.white),
+                onSubmitted: (value) => _searchLocation(value),
+              )
+            : const Text('Map & Nearby Wells'),
+        backgroundColor: AppColors.primaryBlue.withAlpha((0.9 * 255).round()),
+        elevation: 0,
+        actions: [
+          if (_isSearching)
+            IconButton(
+              icon: Icon(Icons.close),
+              onPressed: () {
+                setState(() {
+                  _isSearching = false;
+                  _searchController.clear();
+                });
+              },
+            )
+          else
+            IconButton(
+              icon: Icon(Icons.search),
+              onPressed: () {
+                setState(() {
+                  _isSearching = true;
+                });
+              },
+            ),
+        ],
+      ),
+      body: Stack(
+        children: [
+          // Map
+          FlutterMap(
+            mapController: _mapController,
+            options: MapOptions(
+              initialCenter: _userLocation,
+              initialZoom: 14,
+              maxZoom: 18,
+              minZoom: 2,
+            ),
+            children: [
+              // Tile Layer (Switchable)
+              TileLayer(
+                urlTemplate: _isSatellite
+                    ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+                    : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'com.technova.ground_truth', // Updated to match potential real package
+                // Add attribution for Esri if using satellite
+              ),
+
+              // Markers
+              MarkerLayer(
+                markers: _wells
+                    .map(
+                      (well) => Marker(
+                        point: well.location,
+                        width: 40,
+                        height: 40,
+                        child: GestureDetector(
+                          onTap: () => _showWellDetails(well),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: well.color,
+                              border: Border.all(
+                                color: Colors.white,
+                                width: 3,
+                              ),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Colors.black26,
+                                  blurRadius: 4,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              well.status == 'current'
+                                  ? Icons.my_location
+                                  : Icons.water_drop,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ],
+          ),
+
+          // Layer Switcher
+          Positioned(
+            right: 16,
+            top: 100, // Below AppBar
+            child: Column(
+              children: [
+                FloatingActionButton.small(
+                  heroTag: 'layer_toggle',
+                  backgroundColor: Colors.white,
+                  onPressed: () {
+                    setState(() {
+                      _isSatellite = !_isSatellite;
+                    });
+                  },
+                  child: Icon(
+                    _isSatellite ? Icons.map : Icons.satellite_alt,
+                    color: AppColors.primaryBlue,
+                  ),
+                ),
+                SizedBox(height: 8),
+                FloatingActionButton.small(
+                  heroTag: 'my_loc',
+                  backgroundColor: Colors.white,
+                  onPressed: () {
+                     _mapController.move(_userLocation, 14);
+                  },
+                  child: const Icon(Icons.my_location, color: AppColors.primaryBlue,),
+                ),
+              ],
+            ),
+          ),
+          
+          if (_isLoading)
+            Center(
+              child: Container(
+                padding: EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: CircularProgressIndicator(color: Colors.white),
+              ),
+            ),
+
+          // Bottom Sheet
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: GestureDetector(
+              onVerticalDragEnd: (details) {
+                if (details.primaryVelocity! > 0) {
+                  // Drag down - minimize
+                }
+              },
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(24),
+                    topRight: Radius.circular(24),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 10,
+                      offset: Offset(0, -5),
+                    ),
+                  ],
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      // Handle
+                      Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: AppColors.borderGrey,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Nearest Safe Well
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Nearest Safe Well',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: AppColors.textGrey,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: AppColors.safeGreen.withAlpha((0.1 * 255).round()),
+                                border: Border.all(
+                                  color: AppColors.safeGreen,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.water_drop,
+                                    color: AppColors.safeGreen,
+                                    size: 32,
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: const [
+                                        Text(
+                                          'Well ID: WL-001',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                        SizedBox(height: 4),
+                                        Text(
+                                          'Distance: 2km | Depth: 35m',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: AppColors.textGrey,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Other Wells
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Other Wells',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: AppColors.textGrey,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            _buildWellCard(
+                              title: 'Semi-Critical Well',
+                              wellId: 'WL-002',
+                              distance: '1.2km',
+                              depth: '28m',
+                              color: AppColors.warningYellow,
+                            ),
+                            const SizedBox(height: 8),
+                            _buildWellCard(
+                              title: 'Critical Well',
+                              wellId: 'WL-003',
+                              distance: '0.5km',
+                              depth: '15m',
+                              color: Colors.red,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showWellDetails(WellMarker well) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${well.title} - ${well.wellId}'),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  Widget _buildWellCard({
+    required String title,
+    required String wellId,
+    required String distance,
+    required String depth,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withAlpha((0.1 * 255).round()),
+        border: Border.all(color: color),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.water_drop, color: color, size: 24),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '$wellId | $distance away | $depth deep',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.textGrey,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _mapController.dispose();
+    super.dispose();
+  }
+}
+
+class WellMarker {
+  final String id;
+  final LatLng location;
+  final String title;
+  final String wellId;
+  final String distance;
+  final String depth;
+  final String status;
+  final Color color;
+
+  WellMarker({
+    required this.id,
+    required this.location,
+    required this.title,
+    required this.wellId,
+    required this.distance,
+    required this.depth,
+    required this.status,
+    required this.color,
+  });
+}

@@ -4,10 +4,10 @@ import { LayoutDashboard, LineChart, FlaskConical, Settings, Bell, Search, User,
 
 const AppLayout = () => {
     return (
-        <div className="flex h-screen bg-background font-sans text-textMain overflow-hidden">
-            {/* Sidebar */}
-            <aside className="w-64 bg-white border-r border-gray-200 flex flex-col shadow-sm z-10">
-                <div className="p-6 border-b border-gray-100">
+        <div className="flex h-screen bg-transparent font-sans text-textMain overflow-hidden">
+            {/* Sidebar with Glass Effect */}
+            <aside className="w-64 bg-white/80 backdrop-blur-md border-r border-gray-200/50 flex flex-col shadow-sm z-10">
+                <div className="p-6 border-b border-gray-100/50">
                     <h1 className="text-2xl font-bold text-primary tracking-tight">GroundTruth</h1>
                     <p className="text-xs text-textMuted mt-1">Groundwater Resource Eval</p>
                 </div>
@@ -28,7 +28,7 @@ const AppLayout = () => {
                     <NavItem to="/settings" icon={<Settings size={20} />} label="Settings" />
                 </nav>
 
-                <div className="p-4 border-t border-gray-100 space-y-3">
+                <div className="p-4 border-t border-gray-100/50 space-y-3">
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">JS</div>
                         <div className="flex-1 min-w-0">
@@ -47,9 +47,9 @@ const AppLayout = () => {
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col min-w-0 bg-background relative">
-                {/* Top Header */}
-                <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shadow-sm z-10">
+            <main className="flex-1 flex flex-col min-w-0 bg-transparent relative">
+                {/* Top Header with Glass Effect */}
+                <header className="h-16 bg-white/70 backdrop-blur-md border-b border-gray-200/50 flex items-center justify-between px-6 shadow-sm z-10">
                     <div className="flex items-center gap-4 flex-1 max-w-xl">
                         <div className="relative w-full max-w-md">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-textMuted" size={18} />
