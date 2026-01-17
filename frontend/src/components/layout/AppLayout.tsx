@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
-import { LayoutDashboard, LineChart, FlaskConical, Settings, Bell, Search, User, FileText, Activity } from 'lucide-react';
+import { LayoutDashboard, LineChart, FlaskConical, Settings, Bell, Search, User, FileText, Activity, Shield } from 'lucide-react';
 
 import { useAuth } from '../../context/AuthContext';
 
@@ -25,6 +25,7 @@ const AppLayout = () => {
                     </div>
                     {/* Updated analytics link */}
                     <NavItem to="/analytics" icon={<LineChart size={20} />} label="Analytics & Forecasting" />
+                    <NavItem to="/policy" icon={<Shield size={20} />} label="Policy & Regulation" />
 
                     <div className="pt-4 pb-2">
                         <p className="px-3 text-xs font-semibold text-textMuted uppercase tracking-wider">System</p>

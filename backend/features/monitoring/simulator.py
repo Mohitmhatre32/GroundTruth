@@ -65,7 +65,7 @@ def main():
                 pass
 
         print("-" * 30)
-        time.sleep(10) # Updates every 10 seconds
+        time.sleep(40) # Updates every 10 seconds
 
 if __name__ == "__main__":
     main()
