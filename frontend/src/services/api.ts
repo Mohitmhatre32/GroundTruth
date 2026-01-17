@@ -155,6 +155,17 @@ export const updateReading = async (data: ReadingInput): Promise<ReadingResponse
     return response.json();
 };
 
+export const getLiveStatus = async (): Promise<{ status: string; data: any[] }> => {
+    const response = await fetch(`${API_BASE_URL}/live_status`);
+
+    if (!response.ok) {
+        throw new Error(`Failed to fetch live status: ${response.statusText}`);
+    }
+
+    return response.json();
+};
+
+
 /**
  * FORECASTING MODULE
  * Provides historical trend data for dashboard visualization

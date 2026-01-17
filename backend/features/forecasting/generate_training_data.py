@@ -52,7 +52,6 @@ def generate_final_dataset():
         total_trend = np.linspace(0, annual_drop * 5, days)
 
         # --- B. SEASONALITY ---
-        # Peak depth (water at lowest) in June, Recharge in Oct
         day_indices = np.arange(days)
         seasonality = 3.0 * np.sin((2 * np.pi * (day_indices - 100)) / 365.25)
 
@@ -63,7 +62,6 @@ def generate_final_dataset():
             if month in [7, 8, 9]: # July, Aug, Sept
                 if np.random.rand() > 0.75: # Heavy rain spikes
                     recharge_amount = np.random.uniform(0.4, 1.2)
-                    # Recovery lasts 7 days with decay
                     for d in range(7):
                         if i + d < days:
                             recharge_effect[i+d] -= recharge_amount * (0.8**d)
@@ -85,20 +83,12 @@ def generate_final_dataset():
     # 3. SAVE TO CSV
     final_df = pd.concat(all_data)
     final_df.to_csv(output_file, index=False)
+    print(f"✅ CSV Generated: {output_file}")
     
-    # 4. ALSO SAVE STATIONS.JSON (to ensure they match perfectly)
-    with open('stations.json', 'w') as f:
-        json.dump(stations_data, f, indent=4)
-
-    # Combine them
-    levels = base_level + trend + seasonality
-
-    # 3. Save to DataFrame
-    df = pd.DataFrame({'ds': dates, 'y': levels})
-    
-    # 4. Export to CSV
-    df.to_csv(CSV_PATH, index=False)
-    print(f"Dummy Training Data Created at: {CSV_PATH}")
+    # # 4. SAVE STATIONS.JSON
+    # with open('stations.json', 'w') as f:
+    #     json.dump(stations_data, f, indent=4)
+    # print(f"✅ JSON Generated: stations.json")
 
 if __name__ == "__main__":
     generate_final_dataset()

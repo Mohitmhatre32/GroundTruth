@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
-import { LayoutDashboard, LineChart, FlaskConical, Settings, Bell, Search, User, FileText } from 'lucide-react';
+import { LayoutDashboard, LineChart, FlaskConical, Settings, Bell, Search, User, FileText, Activity } from 'lucide-react';
+
 import { useAuth } from '../../context/AuthContext';
 
 const AppLayout = () => {
@@ -17,12 +18,13 @@ const AppLayout = () => {
 
                 <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
                     <NavItem to="/dashboard" icon={<LayoutDashboard size={20} />} label="Command Center" />
+                    <NavItem to="/real-time" icon={<Activity size={20} />} label="Real Time Center" />
                     <NavItem to="/simulation" icon={<FlaskConical size={20} />} label="Simulation Lab" />
                     <div className="pt-4 pb-2">
                         <p className="px-3 text-xs font-semibold text-textMuted uppercase tracking-wider">Analytics</p>
                     </div>
-                    {/* Mock link for analytics - in real app would be dynamic or accessible via map */}
-                    <NavItem to="/analytics/station-1" icon={<LineChart size={20} />} label="Deep Dive (Demo)" />
+                    {/* Updated analytics link */}
+                    <NavItem to="/analytics" icon={<LineChart size={20} />} label="Analytics & Forecasting" />
 
                     <div className="pt-4 pb-2">
                         <p className="px-3 text-xs font-semibold text-textMuted uppercase tracking-wider">System</p>
@@ -30,6 +32,7 @@ const AppLayout = () => {
                     <NavItem to="/reports" icon={<FileText size={20} />} label="Reports" />
                     <NavItem to="/settings" icon={<Settings size={20} />} label="Settings" />
                 </nav>
+
 
                 <div className="p-4 border-t border-gray-100/50 space-y-3">
                     <div className="flex items-center gap-3">
