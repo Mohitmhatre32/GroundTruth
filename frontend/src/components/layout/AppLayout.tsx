@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
-import { LayoutDashboard, LineChart, FlaskConical, Settings, Bell, Search, User } from 'lucide-react';
+import { LayoutDashboard, LineChart, FlaskConical, Settings, Bell, Search, User, FileText } from 'lucide-react';
 
 const AppLayout = () => {
     return (
@@ -24,7 +24,7 @@ const AppLayout = () => {
                     <div className="pt-4 pb-2">
                         <p className="px-3 text-xs font-semibold text-textMuted uppercase tracking-wider">System</p>
                     </div>
-                    <NavItem to="/reports" icon={<Settings size={20} />} label="Reports" />
+                    <NavItem to="/reports" icon={<FileText size={20} />} label="Reports" />
                     <NavItem to="/settings" icon={<Settings size={20} />} label="Settings" />
                 </nav>
 
