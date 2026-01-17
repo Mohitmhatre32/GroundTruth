@@ -28,7 +28,7 @@ const AppLayout = () => {
                     <NavItem to="/settings" icon={<Settings size={20} />} label="Settings" />
                 </nav>
 
-                <div className="p-4 border-t border-gray-100">
+                <div className="p-4 border-t border-gray-100 space-y-3">
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">JS</div>
                         <div className="flex-1 min-w-0">
@@ -36,6 +36,13 @@ const AppLayout = () => {
                             <p className="text-xs text-textMuted truncate">Policy Maker</p>
                         </div>
                     </div>
+                    <button
+                        onClick={() => window.location.href = '/login'}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-danger hover:bg-danger/10 rounded-lg transition-colors"
+                    >
+                        <User size={16} />
+                        <span>Log Out</span>
+                    </button>
                 </div>
             </aside>
 
