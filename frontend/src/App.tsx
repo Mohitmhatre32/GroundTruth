@@ -11,6 +11,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 import Landing from './pages/Landing';
 import Reports from './pages/Reports';
+import RealTimeCenter from './pages/RealTimeCenter';
+
 
 function App() {
     return (
@@ -23,11 +25,13 @@ function App() {
                     <Route element={<ProtectedRoute />}>
                         <Route element={<AppLayout />}>
                             <Route path="/dashboard" element={<Dashboard />} />
+                            <Route path="/real-time" element={<RealTimeCenter />} />
                             <Route path="/reports" element={<Reports />} />
-                            <Route path="/analytics/:stationId" element={<Analytics />} />
+                            <Route path="/analytics" element={<Analytics />} />
                             <Route path="/simulation" element={<Simulation />} />
                         </Route>
                     </Route>
+
                 </Routes>
                 <Toaster position="top-right" richColors />
             </Router>

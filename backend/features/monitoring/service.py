@@ -17,3 +17,8 @@ def update_station_data(station_id: str, water_level: float, location_name: str,
     
     db.collection(COLLECTION_NAME).document(station_id).set(data_payload, merge=True)
     return data_payload
+
+def get_live_readings():
+    db = get_db()
+    docs = db.collection(COLLECTION_NAME).stream()
+    return [doc.to_dict() for doc in docs]

@@ -1,13 +1,22 @@
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Station } from '../../services/mockDataService';
 import { useNavigate } from 'react-router-dom';
-// Fix Leaflet default icon issue
 import L from 'leaflet';
 
-const createCustomIcon = (status: Station['status']) => {
+// Use the same type as Dashboard
+interface MapStation {
+    id: string;
+    name: string;
+    location: string;
+    waterLevel: number;
+    status: 'safe' | 'warning' | 'critical';
+    lat: number;
+    lng: number;
+}
+
+const createCustomIcon = (status: MapStation['status']) => {
     let colorClass = '';
     switch (status) {
         case 'critical': colorClass = 'bg-danger shadow-red-500/50'; break;
@@ -24,7 +33,7 @@ const createCustomIcon = (status: Station['status']) => {
 };
 
 interface StationMapProps {
-    stations: Station[];
+    stations: MapStation[];
 }
 
 const StationMap: React.FC<StationMapProps> = ({ stations }) => {
@@ -59,9 +68,9 @@ const StationMap: React.FC<StationMapProps> = ({ stations }) => {
                                 <div className="text-sm mt-1">
                                     <span className="text-textMuted">Level: </span>
                                     <span className={`font-semibold ${station.status === 'critical' ? 'text-danger' :
-                                            station.status === 'warning' ? 'text-warning' : 'text-success'
+                                        station.status === 'warning' ? 'text-warning' : 'text-success'
                                         }`}>
-                                        {station.waterLevel}m ({station.status})
+                                        {station.waterLevel.toFixed(1)}m ({station.status})
                                     </span>
                                 </div>
                                 <div className="text-xs text-textMuted mt-1">
