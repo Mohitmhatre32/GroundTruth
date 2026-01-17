@@ -303,6 +303,43 @@ export const exportResearchData = async (): Promise<ExportDataResponse> => {
     return response.json();
 };
 
+/**
+ * REPORTING MODULE
+ * Download CSV/PDF reports
+ */
+
+export interface CustomReportParams {
+    station_id: string;
+    start: string;
+    end: string;
+}
+
+export const exportOverallReport = async (type: 'csv' | 'pdf'): Promise<Blob> => {
+    const endpoint = type === 'csv' ? '/export/overall-csv' : '/export/overall-pdf';
+    const response = await fetch(`${API_BASE_URL}${endpoint}`);
+
+    if (!response.ok) {
+        throw new Error(`Failed to download report: ${response.statusText}`);
+    }
+
+    return response.blob();
+};
+
+export const exportCustomReport = async (type: 'csv' | 'pdf', params: CustomReportParams): Promise<Blob> => {
+    const endpoint = type === 'csv' ? '/export/custom-csv' : '/export/custom-pdf';
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(params),
+    });
+
+    if (!response.ok) {
+        throw new Error(`Failed to download report: ${response.statusText}`);
+    }
+
+    return response.blob();
+};
+
 // ============================================================================
 // HELPER UTILITIES
 // ============================================================================

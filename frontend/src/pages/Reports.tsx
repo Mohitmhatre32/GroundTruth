@@ -3,7 +3,7 @@ import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, A
 
 import { FileText, Download, Calendar, TrendingDown, AlertCircle, BarChart2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { getHistory, HistoryRecord } from '../services/api';
+import { getHistory, HistoryRecord, getZones, Station, exportOverallReport, exportCustomReport } from '../services/api';
 
 interface ChartData {
     date: string;
@@ -21,18 +21,28 @@ const Reports = () => {
         trend: 'stable' as 'rising' | 'falling' | 'stable'
     });
 
-    useEffect(() => {
-        const fetchHistory = async () => {
-            try {
-                const data: HistoryRecord[] = await getHistory();
+    // Custom Report State
+    const [stations, setStations] = useState<Station[]>([]);
+    const [selectedStation, setSelectedStation] = useState<string>('');
+    const [dateRange, setDateRange] = useState({ start: '', end: '' });
+    const [downloading, setDownloading] = useState({ overall: false, custom: false });
 
-                // Transform data
-                const transformedData: ChartData[] = data.map(record => ({
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [historyData, stationsData] = await Promise.all([
+                    getHistory(),
+                    getZones()
+                ]);
+
+                // Transform history data
+                const transformedData: ChartData[] = historyData.map(record => ({
                     date: record.ds,
                     level: record.y
                 }));
 
                 setHistory(transformedData);
+                setStations(stationsData);
 
                 // Calculate statistics
                 if (transformedData.length > 0) {
@@ -63,14 +73,63 @@ const Reports = () => {
 
                 setLoading(false);
             } catch (error) {
-                console.error('Error fetching history:', error);
-                toast.error('Failed to load historical data');
+                console.error('Error fetching data:', error);
+                toast.error('Failed to load dashboard data');
                 setLoading(false);
             }
         };
 
-        fetchHistory();
+        fetchData();
     }, []);
+
+    const handleDownloadOverall = async (type: 'csv' | 'pdf') => {
+        try {
+            setDownloading(prev => ({ ...prev, overall: true }));
+            const blob = await exportOverallReport(type);
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = type === 'csv' ? 'GroundTruth_Full_History.csv' : 'Executive_Summary_Report.pdf';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            toast.success(`Overall ${type.toUpperCase()} report downloaded`);
+        } catch (error) {
+            console.error('Download error:', error);
+            toast.error('Failed to download report');
+        } finally {
+            setDownloading(prev => ({ ...prev, overall: false }));
+        }
+    };
+
+    const handleDownloadCustom = async (type: 'csv' | 'pdf') => {
+        if (!selectedStation || !dateRange.start || !dateRange.end) {
+            toast.error('Please select station and date range');
+            return;
+        }
+
+        try {
+            setDownloading(prev => ({ ...prev, custom: true }));
+            const blob = await exportCustomReport(type, {
+                station_id: selectedStation,
+                start: dateRange.start,
+                end: dateRange.end
+            });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = type === 'csv' ? `Station_${selectedStation}_Data.csv` : `Station_${selectedStation}_Analysis.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            toast.success(`Custom ${type.toUpperCase()} report downloaded`);
+        } catch (error) {
+            console.error('Download error:', error);
+            toast.error('Failed to download report');
+        } finally {
+            setDownloading(prev => ({ ...prev, custom: false }));
+        }
+    };
 
     // const reports = [
     //     { id: 1, name: 'Groundwater Status Report - Dec 2025', date: '2025-12-31', size: '2.4 MB' },
@@ -244,6 +303,129 @@ const Reports = () => {
                         </ResponsiveContainer>
                     </div>
                 )}
+            </div>
+
+            {/* Download Reports Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Overall Reports */}
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-full">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="p-2 bg-primary/10 rounded-lg">
+                            <FileText className="text-primary" size={24} />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold text-textMain">Overall System Report</h2>
+                            <p className="text-sm text-textMuted">Complete history of all monitoring stations</p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <button
+                            onClick={() => handleDownloadOverall('csv')}
+                            disabled={downloading.overall}
+                            className="w-full flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-primary hover:bg-primary/5 transition-all group"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-gray-100 rounded text-gray-600 group-hover:bg-white group-hover:text-primary">
+                                    <FileText size={20} />
+                                </div>
+                                <div className="text-left">
+                                    <p className="font-semibold text-textMain">Full History (CSV)</p>
+                                    <p className="text-xs text-textMuted">Raw data for analysis</p>
+                                </div>
+                            </div>
+                            <Download size={20} className="text-gray-400 group-hover:text-primary" />
+                        </button>
+
+                        <button
+                            onClick={() => handleDownloadOverall('pdf')}
+                            disabled={downloading.overall}
+                            className="w-full flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-primary hover:bg-primary/5 transition-all group"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-gray-100 rounded text-gray-600 group-hover:bg-white group-hover:text-primary">
+                                    <FileText size={20} />
+                                </div>
+                                <div className="text-left">
+                                    <p className="font-semibold text-textMain">Executive Summary (PDF)</p>
+                                    <p className="text-xs text-textMuted">Formatted insights & charts</p>
+                                </div>
+                            </div>
+                            <Download size={20} className="text-gray-400 group-hover:text-primary" />
+                        </button>
+                    </div>
+                </div>
+
+                {/* Custom Reports */}
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-full">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="p-2 bg-secondary/10 rounded-lg">
+                            <Download className="text-secondary" size={24} />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold text-textMain">Custom Data Export</h2>
+                            <p className="text-sm text-textMuted">Generate specific station reports</p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium text-textMain mb-1">Select Station</label>
+                            <select
+                                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+                                value={selectedStation}
+                                onChange={(e) => setSelectedStation(e.target.value)}
+                            >
+                                <option value="">-- Choose a Station --</option>
+                                {stations.map(station => (
+                                    <option key={station.id} value={station.id}>
+                                        {station.name} ({station.id})
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-textMain mb-1">From Date</label>
+                                <input
+                                    type="date"
+                                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+                                    value={dateRange.start}
+                                    onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-textMain mb-1">To Date</label>
+                                <input
+                                    type="date"
+                                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+                                    value={dateRange.end}
+                                    onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3 pt-2">
+                            <button
+                                onClick={() => handleDownloadCustom('csv')}
+                                disabled={downloading.custom || !selectedStation || !dateRange.start || !dateRange.end}
+                                className="flex-1 bg-white border border-gray-300 text-textMain py-2 px-4 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center gap-2"
+                            >
+                                <FileText size={18} />
+                                CSV
+                            </button>
+                            <button
+                                onClick={() => handleDownloadCustom('pdf')}
+                                disabled={downloading.custom || !selectedStation || !dateRange.start || !dateRange.end}
+                                className="flex-1 bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center gap-2"
+                            >
+                                <Download size={18} />
+                                PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
         </div>
