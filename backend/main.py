@@ -1,6 +1,4 @@
 import os
-import threading  # 👈 New Import
-import time       # 👈 New Import
 from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,7 +8,7 @@ from fastapi.responses import HTMLResponse
 from dotenv import load_dotenv
 
 from config import init_firebase
-# Import Routers
+# Import Feature Routers
 from features.monitoring.router import router as monitoring_router
 from features.forecasting.router import router as forecasting_router
 from features.analysis.router import router as analysis_router
@@ -18,15 +16,17 @@ from features.risk.router import router as risk_router
 from features.policy.router import router as policy_router
 from features.research.router import router as research_router
 from features.reporting.router import router as reporting_router
-
-# Import the Simulator Function
-from features.monitoring.simulator import main # 👈 Import the simulator logic
+from features.weather.router import router as weather_router
+from features.economics.router import router as economics_router
+from features.leaderboard.router import router as leaderboard_router
+from features.satellite.router import router as satellite_router
 
 BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR / ".env")
 
-app = FastAPI(title="GroundTruth API")
+app = FastAPI(title="GroundTruth Web Backend")
 
+# Setup Folders
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
@@ -38,29 +38,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- THE AUTOMATION MAGIC HAPPENS HERE ---
 @app.on_event("startup")
 async def startup_event():
-    # 1. Initialize Database
     init_firebase()
-    
-    # 2. Define a wrapper to delay the simulator slightly
-    #    (So the server has 2 seconds to start up before we hit the API)
-    def start_background_simulation():
-        time.sleep(3) 
-        try:
-            main()
-        except Exception as e:
-            print(f"❌ Simulator crashed: {e}")
+    print("🚀 Web API Server is Ready.")
 
-    # 3. Start Simulator in a Background Thread
-    #    daemon=True means this thread will die automatically when you stop the server
-    sim_thread = threading.Thread(target=start_background_simulation, daemon=True)
-    sim_thread.start()
-    
-    print("✅ Background Simulation Thread Started automatically.")
-
-# Register Routers
+# Register All Routers
 app.include_router(monitoring_router, prefix="/api", tags=["Monitoring"])
 app.include_router(forecasting_router, prefix="/api", tags=["Forecasting"])
 app.include_router(analysis_router, prefix="/api", tags=["Analysis"])
@@ -68,7 +51,10 @@ app.include_router(risk_router, prefix="/api", tags=["Risk"])
 app.include_router(policy_router, prefix="/api", tags=["Policy"])
 app.include_router(research_router, prefix="/api", tags=["Research"])
 app.include_router(reporting_router, prefix="/api", tags=["Reporting"])
-
+app.include_router(weather_router, prefix="/api/weather", tags=["Weather"])
+app.include_router(economics_router, prefix="/api/economics", tags=["Economics"])
+app.include_router(leaderboard_router, prefix="/api/leaderboard", tags=["Leaderboard"])
+app.include_router(satellite_router, prefix="/api/satellite", tags=["Satellite"])
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
