@@ -55,3 +55,12 @@ async def receive_reading(reading: ReadingInput):
         return {"status": "success", "data": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/live_status")
+async def get_all_readings():
+    try:
+        from .service import get_live_readings
+        data = get_live_readings()
+        return {"status": "success", "data": data}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
