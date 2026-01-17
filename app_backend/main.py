@@ -1,6 +1,4 @@
-import os
-import threading  # 👈 New Import
-import time       # 👈 New Import
+import os, threading, time
 from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,65 +8,62 @@ from fastapi.responses import HTMLResponse
 from dotenv import load_dotenv
 
 from config import init_firebase
-# Import Routers
 from features.monitoring.router import router as monitoring_router
 from features.forecasting.router import router as forecasting_router
 from features.analysis.router import router as analysis_router
 from features.risk.router import router as risk_router
 from features.policy.router import router as policy_router
 from features.research.router import router as research_router
+from features.mobile_api.router import router as mobile_router
+from features.mobile_notifications.router import router as mobile_notifications_router
 from features.reporting.router import router as reporting_router
 
-# Import the Simulator Function
-from features.monitoring.simulator import main # 👈 Import the simulator logic
+# Import both simulator functions
+from features.monitoring.simulator_web import run_web_simulation
+from features.monitoring.simulator_mobile import run_mobile_simulation
 
 BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR / ".env")
 
 app = FastAPI(title="GroundTruth API")
 
+# --- INTERACTIVE SIMULATOR SELECTION ---
+print("\n" + "="*30)
+print("GROUNDTRUTH STARTUP CONTROL")
+print("="*30)
+print("1. Run Web Simulator (Dashboard Only)")
+print("2. Run Mobile Simulator (Dashboard + Phone Alerts)")
+sim_choice = input("Enter choice (1 or 2): ")
+print("="*30 + "\n")
+
+@app.on_event("startup")
+async def startup_event():
+    init_firebase()
+    
+    # Choose which simulator to run based on input
+    target_func = run_web_simulation if sim_choice == "1" else run_mobile_simulation
+    
+    # Run in background thread
+    sim_thread = threading.Thread(target=target_func, daemon=True)
+    sim_thread.start()
+    print(f"✅ Background Simulator {'Web' if sim_choice=='1' else 'Mobile'} started.")
+
+# Static and Template Setup
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
-# --- THE AUTOMATION MAGIC HAPPENS HERE ---
-@app.on_event("startup")
-async def startup_event():
-    # 1. Initialize Database
-    init_firebase()
-    
-    # 2. Define a wrapper to delay the simulator slightly
-    #    (So the server has 2 seconds to start up before we hit the API)
-    def start_background_simulation():
-        time.sleep(3) 
-        try:
-            main()
-        except Exception as e:
-            print(f"❌ Simulator crashed: {e}")
-
-    # 3. Start Simulator in a Background Thread
-    #    daemon=True means this thread will die automatically when you stop the server
-    sim_thread = threading.Thread(target=start_background_simulation, daemon=True)
-    sim_thread.start()
-    
-    print("✅ Background Simulation Thread Started automatically.")
-
-# Register Routers
+# Register all Routers
 app.include_router(monitoring_router, prefix="/api", tags=["Monitoring"])
 app.include_router(forecasting_router, prefix="/api", tags=["Forecasting"])
 app.include_router(analysis_router, prefix="/api", tags=["Analysis"])
 app.include_router(risk_router, prefix="/api", tags=["Risk"])
 app.include_router(policy_router, prefix="/api", tags=["Policy"])
 app.include_router(research_router, prefix="/api", tags=["Research"])
+app.include_router(mobile_router, prefix="/api/mobile", tags=["Mobile API"])
+app.include_router(mobile_notifications_router, prefix="/api/notify", tags=["Mobile Notifications"])
 app.include_router(reporting_router, prefix="/api", tags=["Reporting"])
-
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
