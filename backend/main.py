@@ -16,6 +16,7 @@ from features.risk.router import router as risk_router
 from features.policy.router import router as policy_router
 from features.research.router import router as research_router
 from features.reporting.router import router as reporting_router
+from features.alerts.router import router as alerts_router
 
 BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR / ".env")
@@ -47,6 +48,7 @@ app.include_router(risk_router, prefix="/api", tags=["Risk"])
 app.include_router(policy_router, prefix="/api", tags=["Policy"])
 app.include_router(research_router, prefix="/api", tags=["Research"])
 app.include_router(reporting_router, prefix="/api", tags=["Reporting"])
+app.include_router(alerts_router, prefix="/api", tags=["Alerts"])
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
