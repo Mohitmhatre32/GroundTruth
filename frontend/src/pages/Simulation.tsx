@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import RiskAnalysis from '../components/ui/RiskAnalysis';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid } from 'recharts';
-import { Sliders, RefreshCw, Zap, MapPin } from 'lucide-react';
+import { Sliders, RefreshCw, Zap, MapPin, ChevronDown, Check, Search } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { getZones, analyzeZone, Station, SimulationResult } from '../services/api';
 import { toast } from 'sonner';
 
@@ -12,10 +13,15 @@ const Simulation = () => {
 
     // Simulation State
     const [selectedZone, setSelectedZone] = useState<string>('');
+    const [selectedZoneName, setSelectedZoneName] = useState<string>('');
     const [rainfall, setRainfall] = useState<number>(750);
     const [extractionPercent, setExtractionPercent] = useState<number>(100);
     const [result, setResult] = useState<SimulationResult | null>(null);
     const [simLoading, setSimLoading] = useState(false);
+
+    // Dropdown state
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
 
     // Initial load
     useEffect(() => {
@@ -23,7 +29,10 @@ const Simulation = () => {
             try {
                 const data = await getZones();
                 setStations(data);
-                if (data.length > 0) setSelectedZone(data[0].id);
+                if (data.length > 0) {
+                    setSelectedZone(data[0].id);
+                    setSelectedZoneName(data[0].name);
+                }
             } catch (error) {
                 console.error('Error fetching stations:', error);
                 toast.error('Failed to load stations');
@@ -67,6 +76,12 @@ const Simulation = () => {
         { name: 'Extraction', value: result.projected_extraction_mcm, color: '#C96A6A' }
     ] : [];
 
+    // Filter stations based on search
+    const filteredStations = stations.filter(s =>
+        s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        s.id.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
     if (pageLoading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
@@ -91,24 +106,80 @@ const Simulation = () => {
                 {/* LEFT: CONTROLS */}
                 <div className="lg:col-span-4 flex flex-col gap-6">
                     <div className="bg-white/50 backdrop-blur-xl rounded-2xl shadow-lg border border-white/40 p-6 flex-1 flex flex-col">
-                        {/* <div className="flex items-center gap-3 mb-6 p-2 bg-primary/10 rounded-lg w-fit text-primary">
-                            <Sliders size={24} />
-                            <h2 className="text-lg font-bold">Configuration</h2>
-                        </div> */}
-
                         <div className="space-y-8 flex-1">
                             {/* Zone Select */}
                             <div className="space-y-2">
                                 <label className="text-xs font-bold text-textMuted uppercase tracking-wider">Target Zone</label>
-                                <div className="relative group">
-                                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-primary group-hover:scale-110 transition-transform" size={18} />
-                                    <select
-                                        className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/50 border border-white/40 focus:bg-white/80 focus:ring-2 focus:ring-primary/20 outline-none font-medium text-textMain appearance-none transition-all shadow-sm cursor-pointer"
-                                        value={selectedZone}
-                                        onChange={(e) => setSelectedZone(e.target.value)}
-                                    >
-                                        {stations.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                                    </select>
+
+                                <div className="relative">
+                                    <div className="relative group">
+                                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-primary group-hover:scale-110 transition-transform z-10" size={18} />
+                                        <button
+                                            onClick={() => {
+                                                setIsDropdownOpen(!isDropdownOpen);
+                                                if (!isDropdownOpen) setSearchQuery("");
+                                            }}
+                                            className="w-full pl-10 pr-10 py-3 rounded-xl bg-white border border-white/40 focus:ring-2 focus:ring-primary/20 outline-none font-medium text-textMain flex items-center justify-between transition-all shadow-sm cursor-pointer group hover:bg-white/80"
+                                        >
+                                            <span className="truncate">{selectedZoneName || 'Select a zone...'}</span>
+                                            <ChevronDown className={`transition-transform duration-300 text-primary ${isDropdownOpen ? 'rotate-180' : ''}`} size={18} />
+                                        </button>
+                                    </div>
+
+                                    <AnimatePresence>
+                                        {isDropdownOpen && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: -10, scale: 0.98 }}
+                                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                exit={{ opacity: 0, y: -10, scale: 0.98 }}
+                                                transition={{ duration: 0.2, ease: "easeOut" }}
+                                                className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl border border-primary/20 shadow-2xl max-h-[350px] overflow-hidden z-[100] flex flex-col"
+                                            >
+                                                {/* Search Input */}
+                                                <div className="p-3 border-b border-primary/10 bg-slate-50 sticky top-0 z-10">
+                                                    <div className="relative">
+                                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                                                        <input
+                                                            autoFocus
+                                                            type="text"
+                                                            placeholder="Search zones..."
+                                                            value={searchQuery}
+                                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                                            className="w-full pl-9 pr-3 py-2 text-sm border border-primary/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-slate-700 bg-white"
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="overflow-y-auto custom-scrollbar p-2">
+                                                    {filteredStations.length === 0 ? (
+                                                        <div className="px-4 py-3 text-slate-500 text-center text-sm">
+                                                            No zones found
+                                                        </div>
+                                                    ) : (
+                                                        filteredStations.map(s => (
+                                                            <button
+                                                                key={s.id}
+                                                                onClick={() => {
+                                                                    setSelectedZone(s.id);
+                                                                    setSelectedZoneName(s.name);
+                                                                    setIsDropdownOpen(false);
+                                                                    setResult(null); // Clear previous results
+                                                                }}
+                                                                className={`w-full px-4 py-3 text-left hover:bg-slate-50 flex items-center justify-between transition-colors rounded-lg mb-1 ${selectedZone === s.id ? 'bg-primary/5 text-primary font-bold' : 'text-slate-700'
+                                                                    }`}
+                                                            >
+                                                                <span className="truncate">{s.name}</span>
+                                                                {selectedZone === s.id && (
+                                                                    <Check size={16} className="text-primary" />
+                                                                )}
+                                                            </button>
+                                                        ))
+                                                    )}
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
                                 </div>
                             </div>
 
@@ -188,9 +259,6 @@ const Simulation = () => {
                                             <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${result.status === 'Deficit' || result.status === 'Critical' ? 'bg-danger/10 text-danger' : 'bg-success/10 text-success'}`}>
                                                 Status: {result.status || 'Unknown'}
                                             </span>
-                                            {/* <span className="px-2 py-0.5 rounded text-xs font-bold bg-blue-50 text-blue-600">
-                                                Refill: {result.percent_refilled?.toFixed(1) || '0.0'}%
-                                            </span> */}
                                         </div>
                                     </div>
                                     <div className="text-right">
@@ -254,4 +322,3 @@ const Simulation = () => {
 };
 
 export default Simulation;
-

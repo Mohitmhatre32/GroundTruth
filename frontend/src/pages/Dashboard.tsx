@@ -176,7 +176,7 @@ const Dashboard = () => {
                     className="surface-card px-6 py-3 rounded-2xl flex items-center gap-2 font-black text-xs uppercase tracking-widest text-slate-700 hover:text-primary active:scale-95 cursor-pointer border-primary/20 bg-slate-50/50"
                 >
                     <FileText size={16} className="text-primary" />
-                    Generate Report
+                    Review Report
                 </button>
             </div>
         </div>
