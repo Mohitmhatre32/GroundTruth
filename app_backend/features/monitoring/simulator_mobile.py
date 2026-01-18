@@ -1,5 +1,5 @@
 import time, random, requests, json, os
-from features.mobile_notifications.service import send_critical_notification
+from features.mobile_notifications.fcm import send_critical_notification
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 STATIONS_FILE = os.path.join(BASE_DIR, "stations.json")
