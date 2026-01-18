@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../widgets/animated_gradient_background.dart';
 import '../../providers/alert_provider.dart';
 import 'farmer_home_screen.dart';
 import 'jal_mitra_chat_screen.dart';
@@ -7,7 +8,7 @@ import 'map_nearby_screen.dart';
 import '../analysis/analysis_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -37,7 +38,14 @@ class _HomeScreenState extends State<HomeScreen> {
     final alertProvider = context.watch<AlertProvider>();
 
     return Scaffold(
-      body: _screens[_selectedIndex],
+      body: Stack(
+        children: [
+          const Positioned.fill(
+            child: AnimatedGradientBackground(),
+          ),
+          _screens[_selectedIndex],
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         currentIndex: _selectedIndex,

@@ -6,7 +6,7 @@ import '../../utils/app_colors.dart';
 import '../../widgets/alert_widget.dart';
 
 class AlertsScreen extends StatefulWidget {
-  const AlertsScreen({Key? key}) : super(key: key);
+  const AlertsScreen({super.key});
 
   @override
   State<AlertsScreen> createState() => _AlertsScreenState();

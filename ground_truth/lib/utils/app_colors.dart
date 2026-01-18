@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  // Primary Colors (Aqua-Tech Modern)
-  static const Color primaryBlue = Color(0xFF1A3C5E);
-  static const Color waterBlue = Color(0xFF3498DB);
-  static const Color lightBlue = Color(0xFFE3F2FD);
+  // Primary Colors (Astonishing Palette)
+  static const Color primaryBlue = Color(0xFF005792); // Deep Blue
+  static const Color accentCyan = Color(0xFF53CDE2);  // Cyan/Teal
+  static const Color softBlue = Color(0xFFD1F4FA);    // Very Light Blue
+  static const Color backgroundLight = Color(0xFFEDF9FC); // Almost White
+  
+  static const Color waterBlue = accentCyan; // Mapping for compatibility
+  static const Color lightBlue = softBlue;   // Mapping for compatibility
 
-  // Status Colors
-  static const Color safeGreen = Color(0xFF1ABC9C);
-  static const Color warningYellow = Color(0xFFF39C12);
-  static const Color criticalRed = Color(0xFFE74C3C);
+  // Status Colors (Vibrant)
+  static const Color safeGreen = Color(0xFF00C853);
+  static const Color warningYellow = Color(0xFFFFB300);
+  static const Color criticalRed = Color(0xFFFF1744);
 
   // Zone Classification
   static const Color zoneSafe = safeGreen;
@@ -18,20 +22,20 @@ class AppColors {
 
   // Neutral Colors
   static const Color white = Color(0xFFFFFFFF);
-  static const Color black = Color(0xFF000000);
-  static const Color darkGrey = Color(0xFF2C3E50);
-  static const Color lightGrey = Color(0xFFF5F6FA);
-  static const Color borderGrey = Color(0xFFECF0F1);
-  static const Color textGrey = Color(0xFF7F8C8D);
+  static const Color black = Color(0xFF102027); // Softer black
+  static const Color darkGrey = Color(0xFF37474F);
+  static const Color lightGrey = Color(0xFFCFD8DC);
+  static const Color borderGrey = Color(0xFFB0BEC5);
+  static const Color textGrey = Color(0xFF546E7A);
 
   // Semantic Colors
   static const Color success = safeGreen;
   static const Color warning = warningYellow;
   static const Color error = criticalRed;
-  static const Color info = waterBlue;
+  static const Color info = primaryBlue;
 
   // Backgrounds
-  static const Color backgroundColor = Color(0xFFFAFBFC);
+  static const Color backgroundColor = backgroundLight;
   static const Color cardBackground = white;
-  static const Color shadowColor = Color(0x0D000000);
+  static const Color shadowColor = Color(0x1A005792); // Blue-tinted shadow
 }
