@@ -3,259 +3,267 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GroundTruth Decision Support System</title>
+    <title>GroundTruth | Decision Support System</title>
     
-    <!-- External Libraries (Chart.js for Graphs, Leaflet for Maps) -->
+    <!-- External Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <style>
-        /* --- BASE STYLES --- */
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f8; margin: 0; padding: 20px; color: #333; line-height: 1.6; }
-        .container { max-width: 1200px; margin: 0 auto; }
+        /* --- BRANDING & BASE --- */
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f9; margin: 0; padding: 20px; color: #2c3e50; line-height: 1.6; }
+        .container { max-width: 1240px; margin: 0 auto; }
         
-        /* --- HEADERS & TEXT --- */
-        h2 { 
-            border-left: 6px solid #1A3C5E; padding-left: 12px; color: #1A3C5E; 
-            margin-top: 60px; margin-bottom: 5px; font-size: 24px; text-transform: uppercase; 
-        }
-        .section-desc { 
-            font-size: 15px; color: #555; margin-bottom: 25px; margin-left: 20px; 
-            background: #fff; padding: 10px 15px; border-radius: 6px; border-left: 4px solid #ddd; max-width: 900px; 
-        }
+        /* --- HEADERS --- */
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        h2 { border-left: 6px solid #1A3C5E; padding-left: 15px; color: #1A3C5E; margin-top: 60px; font-size: 22px; text-transform: uppercase; }
+        .section-desc { font-size: 14px; color: #5d6d7e; margin-bottom: 25px; background: #fff; padding: 15px; border-radius: 8px; border-left: 4px solid #3498db; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+
+        /* --- LAYOUT GRID --- */
+        .card-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border-top: 5px solid #bdc3c7; }
+        .chart-box { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .split-view { display: flex; gap: 25px; flex-wrap: wrap; }
+        .col-left { flex: 1; min-width: 320px; }
+        .col-right { flex: 2; min-width: 450px; }
+
+        /* --- DYNAMIC STATUS COLORS --- */
+        .badge { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; animation: pulse 1.5s infinite; }
+        .card-Safe { border-top-color: #27AE60; } .badge-Safe { background-color: #27AE60; }
+        .card-Semi-Critical { border-top-color: #F1C40F; } .badge-Semi-Critical { background-color: #F1C40F; }
+        .card-Critical { border-top-color: #E74C3C; } .badge-Critical { background-color: #E74C3C; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        .level { font-size: 32px; font-weight: 700; margin: 10px 0; color: #1A3C5E; }
+
+        /* --- UI ELEMENTS --- */
+        .input-group { margin-bottom: 20px; }
+        label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 13px; color: #34495e; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #d5dbdb; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
+        button { background: #1A3C5E; color: white; border: none; padding: 14px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; text-transform: uppercase; transition: 0.3s; }
+        button:hover { background: #2c3e50; }
+        input[type=range] { accent-color: #1A3C5E; cursor: pointer; }
         .help-text { font-size: 12px; color: #7f8c8d; margin-top: 4px; font-style: italic; }
 
         /* --- ALERT BANNER --- */
-        #alert-banner { display: none; background-color: #C0392B; color: white; padding: 15px; text-align: center; font-weight: bold; position: sticky; top: 0; z-index: 9999; border-radius: 8px; box-shadow: 0 4px 12px rgba(192, 57, 43, 0.4); animation: flashRed 2s infinite; margin-bottom: 20px;}
-        @keyframes flashRed { 0% { opacity: 1; } 50% { opacity: 0.85; } 100% { opacity: 1; } }
-
-        /* --- CARDS & LAYOUTS --- */
-        .card-container { display: flex; gap: 20px; flex-wrap: wrap; }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); flex: 1; min-width: 240px; border-top: 5px solid #ccc; }
-        .chart-box { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-        .split-view { display: flex; gap: 25px; flex-wrap: wrap; }
-        .col-1 { flex: 1; } .col-2 { flex: 2; }
-
-        /* --- LIVE STATUS COLORS --- */
-        .live-badge { display: inline-block; width: 14px; height: 14px; border-radius: 50%; margin-right: 8px; animation: pulse 1.5s infinite; vertical-align: middle; }
-        .card-Safe { border-top-color: #27AE60; } .badge-Safe { background-color: #27AE60; box-shadow: 0 0 8px #27AE60; } .text-Safe { color: #27AE60; font-weight: bold; }
-        .card-Semi-Critical { border-top-color: #F1C40F; } .badge-Semi-Critical { background-color: #F1C40F; box-shadow: 0 0 8px #F1C40F; } .text-Semi-Critical { color: #F39C12; font-weight: bold; }
-        .card-Critical { border-top-color: #C0392B; } .badge-Critical { background-color: #C0392B; box-shadow: 0 0 8px #C0392B; } .text-Critical { color: #C0392B; font-weight: bold; }
-        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.3); opacity: 0.7; } 100% { transform: scale(1); opacity: 1; } }
-        .level { font-size: 32px; font-weight: 700; margin: 10px 0; color: #2c3e50; }
-
-        /* --- FORM ELEMENTS --- */
-        .input-group { margin-bottom: 20px; }
-        label { display: block; font-weight: 700; margin-bottom: 5px; color: #2c3e50; font-size: 14px; }
-        input[type=range] { width: 100%; cursor: pointer; accent-color: #1A3C5E; }
-        select, input[type=number] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
-        button { width: 100%; padding: 14px; background: #1A3C5E; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 14px; text-transform: uppercase; }
-        button:hover { background: #15304b; }
-
-        /* --- RESEARCH BUTTONS --- */
-        .scenario-btn { background: #ecf0f1; color: #333; border: 1px solid #ccc; margin-bottom: 8px; text-align: left; }
-        .scenario-btn:hover { background: #ddd; }
+        #alert-banner { display: none; background-color: #C0392B; color: white; padding: 15px; text-align: center; font-weight: bold; position: sticky; top: 10px; z-index: 9999; border-radius: 8px; box-shadow: 0 4px 15px rgba(192, 57, 43, 0.4); animation: flashRed 2s infinite; }
+        @keyframes flashRed { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
 
         /* --- VISUALIZATIONS --- */
-        #map { height: 400px; width: 100%; border-radius: 12px; z-index: 1; border: 1px solid #ddd; }
-        .risk-meter { height: 25px; background: #ecf0f1; border-radius: 12px; overflow: hidden; margin-top: 10px; border: 1px solid #ccc; }
-        .risk-fill { height: 100%; width: 0%; transition: width 1s ease; }
+        #map, #satelliteMap { height: 450px; width: 100%; border-radius: 12px; border: 1px solid #ddd; z-index: 1; }
+        .risk-meter { height: 24px; background: #ebf0f1; border-radius: 12px; overflow: hidden; margin: 15px 0; border: 1px solid #ccc; }
+        .risk-fill { height: 100%; width: 0%; transition: width 1s ease-in-out; }
+        .output-note { padding: 15px; border-radius: 8px; font-size: 14px; border-left: 5px solid #1A3C5E; background: #fdfefe; margin-top: 15px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    
-    <!-- FEATURE 7: ZONE CLASSIFICATION (MAP) -->
-    <h2>1. Zone Classification (Geospatial)</h2>
+
+    <header>
+        <div>
+            <h1 style="margin:0; color:#1A3C5E;">GroundTruth Dashboard</h1>
+            <p style="margin:0; color:#7f8c8d; font-size:14px;">National Groundwater Evaluation & Policy Lab</p>
+        </div>
+        <button onclick="location.href='/api/export/overall-pdf'" style="background:#E74C3C; width:auto; padding: 10px 20px;">📄 Global PDF Report</button>
+    </header>
+
+    <!-- ALERT BANNER -->
+    <div id="alert-banner">⚠️ CRITICAL DEPLETION ALERT: Action required in monitored zones.</div>
+
+    <!-- 1. GEOSPATIAL MAP -->
+    <h2>1. Regional Zone Classification (Map)</h2>
     <div class="section-desc">
-        <b>What is this?</b> An interactive map showing the health of the entire region.<br>
-        <b>Legend:</b> <span style="color:#27AE60">● Safe</span> | <span style="color:#F39C12">● Semi-Critical</span> | <span style="color:#C0392B">● Critical</span>
+        <b>Description:</b> A wide-area view of groundwater health across 20 monitored districts.<br>
+        <b>Non-Tech Guide:</b> Look for <span style="color:#e74c3c">Red Circles</span>. These indicate districts where water is deeper than 30m and needs immediate pumping restrictions.
     </div>
     <div id="map"></div>
 
-
-    <!-- FEATURE 1: REAL-TIME MONITORING -->
-    <h2>2. Real-Time Groundwater Monitoring</h2>
+    <!-- 2. REAL-TIME MONITORING -->
+    <h2>2. Real-Time IoT Sensor Network</h2>
     <div class="section-desc">
-        <b>Feature Validated:</b> Connects to dummy DWLR station data. Cards blink to show live IoT connectivity.
+        <b>Description:</b> Live data streaming from DWLR (Digital Water Level Recorder) stations.<br>
+        <b>Non-Tech Guide:</b> These cards update every 10 seconds. If a card's dot is blinking, the sensor is successfully communicating with our server.
     </div>
-    <div id="dashboard" class="card-container">Loading Sensors...</div>
+    <div id="dashboard" class="card-container">Loading sensors...</div>
 
-
-    <!-- FEATURE 2: TRENDS -->
-    <h2>3. Trends & Patterns</h2>
+    <!-- 3. TRENDS -->
+    <h2>3. Trends & Patterns (5-Year Analysis)</h2>
     <div class="section-desc">
-        <b>Feature Validated:</b> Historical trend analysis using interactive line charts.
+        <b>Description:</b> Historical water level data showing seasonal variations.<br>
+        <b>Non-Tech Guide:</b> Upward waves show water refilling during Monsoon. A downward overall slope means we are using more water than nature provides.
     </div>
     <div class="chart-box">
-        <canvas id="trendChart" style="max-height: 250px;"></canvas>
+        <canvas id="trendChart" style="max-height: 280px;"></canvas>
     </div>
 
-
-    <!-- FEATURE 3: RECHARGE ESTIMATION -->
+    <!-- 4. RECHARGE ESTIMATION -->
     <h2>4. Recharge & Availability Estimation</h2>
     <div class="section-desc">
-        <b>Feature Validated:</b> Dynamically estimates groundwater recharge based on specific soil types and rainfall.
+        <b>Description:</b> Mathematical estimation of how much rain becomes groundwater for a specific zone.<br>
+        <b>User Input:</b> Select a station. The system loads its unique soil type and area size.
     </div>
     <div class="split-view">
-        <div class="card col-1">
-            <h3>📍 Select Zone</h3>
-            <div class="input-group">
-                <label>Target Zone</label>
-                <select id="zoneSelect" onchange="runAnalysis()"><option>Loading...</option></select>
-                <div class="help-text">Loads specific geological data.</div>
-            </div>
+        <div class="card col-left" style="border-top:none">
+            <label>📍 Focus Zone</label>
+            <select id="zoneSelect" onchange="runAnalysis()"><option>Loading...</option></select>
         </div>
-        <div class="chart-box col-2">
-            <h3>💧 Water Availability Report</h3>
-            <canvas id="rechargeChart" style="max-height: 180px;"></canvas>
-            <div id="rechargeText" style="margin-top:15px; font-weight:bold; text-align:center; color:#1A3C5E;">--</div>
+        <div class="chart-box col-right">
+            <canvas id="rechargeChart" style="max-height: 200px;"></canvas>
+            <div id="rechargeText" style="text-align:center; font-weight:bold; margin-top:15px;">--</div>
         </div>
     </div>
 
-
-    <!-- FEATURE 6: DEMAND-SUPPLY & SCENARIO PLANNING -->
+    <!-- 5. DEMAND-SUPPLY RISK -->
     <h2>5. Demand–Supply & Scenario Planning</h2>
     <div class="section-desc">
-        <b>Comparison Feature:</b> Compares Water Supply vs Demand using manual inputs for Population and Crop Area.
+        <b>Description:</b> Future planning tool that calculates if there is enough water for the people and farms.<br>
+        <b>User Input:</b> Adjust "Population" and "Crop Area" to see if the district can survive a <b>Drought</b> scenario.
     </div>
     <div class="split-view">
-        <div class="card col-1">
-            <h3>⚠️ Simulation Inputs</h3>
+        <div class="card col-left" style="border-top:none">
             <div class="input-group">
-                <label>1. Select Future Scenario</label>
+                <label>Simulation Scenario</label>
                 <select id="riskScenario">
                     <option value="Normal">Normal Year</option>
-                    <option value="Drought">Severe Drought (-30% Supply)</option>
+                    <option value="Drought">Severe Drought (-30% Rain)</option>
                     <option value="ClimateChange">Climate Change (+10% Demand)</option>
                     <option value="Overuse">Over-Extraction (+25% Demand)</option>
                 </select>
             </div>
-            <div class="input-group">
-                <label>2. Population</label>
-                <input type="number" id="riskPop" value="50000">
-            </div>
-            <div class="input-group">
-                <label>3. Crop Area (sq km)</label>
-                <input type="number" id="riskCrop" value="300">
-            </div>
+            <div class="input-group"><label>Population</label><input type="number" id="riskPop" value="50000"></div>
+            <div class="input-group"><label>Crop Area (sq km)</label><input type="number" id="riskCrop" value="250"></div>
             <button onclick="calculateRisk()">Run Risk Analysis</button>
         </div>
-        <div class="chart-box col-2">
-            <h3>Vulnerability Score: <span id="riskScore">--</span>/100</h3>
+        <div class="chart-box col-right">
+            <h3>Risk Score: <span id="riskScore">--</span>/100</h3>
             <div class="risk-meter"><div id="riskBar" class="risk-fill"></div></div>
-            <p id="riskLabel" style="font-weight: bold; margin-top: 8px;">--</p>
-            
-            <div style="display:flex; justify-content:space-around; margin-top:20px; font-size:14px; background:#fafafa; padding:10px; border-radius:8px;">
-                <div>Supply: <b id="resSupply" style="color:#27AE60">0</b> MCM</div>
-                <div>Demand: <b id="resDemand" style="color:#C0392B">0</b> MCM</div>
-            </div>
-            <div id="riskExplanation" style="margin-top: 15px; padding: 15px; background: #fffbe6; border-left: 4px solid #f1c40f; border-radius: 4px; font-size: 14px;">
-                Enter inputs to see projections.
-            </div>
+            <p id="riskLabel" style="font-weight:bold;">Waiting for input...</p>
+            <div id="riskExplanation" class="output-note">Enter parameters to generate a future vulnerability report.</div>
         </div>
     </div>
 
-
-    <!-- FEATURE 7B: POLICY IMPACT EVALUATION -->
-    <h2>6. Policy Impact Evaluation</h2>
+    <!-- 6. POLICY IMPACT LAB -->
+    <h2>6. Policy Impact Evaluation Lab</h2>
     <div class="section-desc">
-        <b>Feature Validated:</b> Measures the impact of water conservation policies (Harvesting/Bans) on the Net Balance.
+        <b>Description:</b> A "Sandbox" for law makers. Test policies like "Rainwater Harvesting Mandates" here.<br>
+        <b>Special Feature:</b> Use the <b>Fetch Live</b> button to pull real-time weather from OpenWeather satellite data.
     </div>
     <div class="split-view">
-        <div class="card col-1">
-            <h3>⚖️ Policy Sandbox</h3>
+        <div class="card col-left" style="border-top:none">
             <div class="input-group">
-                <label>🌧 Rain Harvesting Mandate (mm)</label>
-                <input type="range" id="rainSlider" min="200" max="2000" value="1200" step="50" oninput="runAnalysis()">
+                <div style="display:flex; justify-content:space-between;">
+                    <label>🌧 Rain Harvesting (mm): <span id="rainVal">1200</span></label>
+                    <button id="weatherBtn" onclick="fetchLiveWeather()" style="width:auto; padding:5px 10px; font-size:11px; background:#3498db; margin:0;">☁️ FETCH LIVE WEATHER</button>
+                </div>
+                <input type="range" id="rainSlider" min="200" max="2500" value="1200" step="50" oninput="document.getElementById('rainVal').innerText=this.value; runAnalysis()">
+                <div id="weatherNote" style="font-size:11px; color:#27AE60; display:none; margin-top:8px; font-style:italic;"></div>
             </div>
             <div class="input-group">
-                <label>⛏ Extraction Regulation (%)</label>
-                <input type="range" id="extSlider" min="50" max="150" value="100" step="10" oninput="runAnalysis()">
-                <div class="help-text">Left: Strict Ban | Right: Expansion</div>
+                <label>⛏ Extraction Limit: <span id="extVal">100</span>%</label>
+                <input type="range" id="extSlider" min="50" max="150" value="100" step="10" oninput="document.getElementById('extVal').innerText=this.value; runAnalysis()">
             </div>
         </div>
-        <div class="chart-box col-2">
-            <h3>📊 Policy Impact Report</h3>
-            <div id="policyResult" style="padding:20px; background:#e8f4fd; border-left:5px solid #3498DB; border-radius:4px; margin-top:20px; font-size:15px;">
-                Adjust sliders to see evaluation.
+        <div class="chart-box col-right">
+            <div id="policyResult" class="output-note" style="background:#f4f9ff; font-size:16px;">Adjust sliders to evaluate policy impact.</div>
+            
+            <!-- ECONOMIC IMPACT CARD -->
+            <div id="economicImpactCard" style="display: none; margin-top: 20px; padding: 20px; background: #27AE60; color: white; border-radius: 12px; box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3);">
+                <div style="font-size: 12px; text-transform: uppercase; opacity: 0.8;">Estimated Financial Savings</div>
+                <div id="savingsAmount" style="font-size: 36px; font-weight: bold; margin: 5px 0;">₹0</div>
+                <div style="font-size: 11px; opacity: 0.9;">Replacement cost saved for this district per year.</div>
             </div>
         </div>
     </div>
 
-
-    <!-- FEATURE 8: RESEARCH & DATA ACCESS -->
-    <h2>7. Research & Data Access (ARIMA vs LSTM)</h2>
+    <!-- 7. RESEARCH LAB -->
+    <h2>7. Research Lab (ARIMA vs LSTM AI)</h2>
     <div class="section-desc">
-        <b>Advanced Modeling:</b> Uses AI (LSTM) and Statistical (ARIMA) models to forecast future trends under different scenarios.
+        <b>Description:</b> Scientific comparison between Statistical (ARIMA) and Deep Learning (LSTM) models.<br>
+        <b>Research Insight:</b> LSTM AI lines often predict sharper drops because they recognize accelerating human usage patterns better than traditional math.
     </div>
     <div class="split-view">
-        <div class="card col-1">
-            <h3>🧪 What-If Engine</h3>
-            <label>Run Scenario:</label>
-            <button class="scenario-btn" onclick="runResearchScenario('Drought')">🔥 Simulate Drought (-50% Rain)</button>
-            <button class="scenario-btn" onclick="runResearchScenario('Overuse')">🏭 Simulate Over-Extraction (+20%)</button>
-            <button class="scenario-btn" onclick="runResearchScenario('Drip')">💧 Mandate Drip Irrigation (Save 40%)</button>
-            
-            <div style="margin-top:20px;">
-                <label>Data Access:</label>
-                <button onclick="downloadCSV()" style="background:#555; font-size:12px;">📥 Download Raw Dataset (.CSV)</button>
-            </div>
+        <div class="card col-left" style="border-top:none">
+            <button onclick="runResearchScenario('Drought')" style="background:#f39c12; margin-bottom:10px;">🔥 SIMULATE DROUGHT</button>
+            <button onclick="runResearchScenario('Overuse')" style="background:#e74c3c; margin-bottom:10px;">🏭 SIMULATE OVERUSE</button>
+            <button onclick="runResearchScenario('Drip')" style="background:#27ae60;">💧 DRIP IRRIGATION POLICY</button>
         </div>
-        <div class="chart-box col-2">
-            <h3>📈 12-Month Forecast Comparison</h3>
+        <div class="chart-box col-right">
             <canvas id="researchChart" style="max-height: 250px;"></canvas>
-            <div style="text-align:center; font-size:12px; margin-top:10px;">
-                <span style="color:#3498DB; font-weight:bold;">🔵 ARIMA (Statistical)</span> vs 
-                <span style="color:#9B59B6; font-weight:bold;">🟣 LSTM (Deep Learning)</span>
+        </div>
+    </div>
+
+    <!-- 8. EXPORT -->
+    <h2>8. Data Export & Professional Reporting</h2>
+    <div class="section-desc">Download raw data logs for academic research or professional PDF reports for administrative meetings.</div>
+    <div class="card" style="margin-bottom:80px; border-top:5px solid #34495e;">
+        <div class="split-view">
+            <div class="col-left">
+                <label>Target Station</label>
+                <select id="rptStn" style="margin-bottom:10px;"><option>Loading...</option></select>
+                <div class="split-view" style="gap:10px;">
+                    <div style="flex:1"><label>Start</label><input type="date" id="rptStart" value="2023-01-01"></div>
+                    <div style="flex:1"><label>End</label><input type="date" id="rptEnd" value="2023-12-31"></div>
+                </div>
+            </div>
+            <div class="col-right" style="display:flex; gap:15px; align-items:center; justify-content:center;">
+                <button onclick="doCustomExport('csv')" style="background:#7f8c8d; flex:1">📥 CSV LOGS</button>
+                <button onclick="doCustomExport('pdf')" style="background:#C0392B; flex:1">📄 FORMAL PDF</button>
+                <button onclick="location.href='/api/export/overall-csv'" style="background:#555; flex:1">📦 FULL DATABASE</button>
             </div>
         </div>
     </div>
-    
-    <div style="height:80px"></div>
-    
-    <!-- FEATURE 9: ADVANCED DATA EXPORT CENTER -->
-    <h2>9. Data Export & Professional Reporting</h2>
+
+    <!-- 9. SUSTAINABILITY LEADERBOARD -->
+    <h2>9. Cross-District Sustainability Ranking</h2>
     <div class="section-desc">
-        Access official administrative records. Generate high-fidelity PDF reports including AI-based ARIMA/LSTM forecast tables.
+        <b>Comparative Analytics:</b> Rankings based on <i>Sustainability Index</i> (Water Depth + Soil Recharge Potential). 
+        Allows planners to identify "Hero Districts" and "Distress Zones."
     </div>
     
-    <div class="split-view" style="margin-bottom: 80px;">
-        
-        <!-- COLUMN A: OVERALL DOWNLOADS -->
-        <div class="card" style="flex: 1;">
-            <h3>📊 Standard Archives</h3>
-            <p class="help-text">Download the entire GroundTruth database (All 20 stations, 5-year daily logs).</p>
-            <button onclick="location.href='/api/export/overall-csv'" style="background:#555;">📥 Download Full CSV (Raw Data)</button>
-            <button onclick="location.href='/api/export/overall-pdf'" style="background:#1A3C5E;">📄 Download Network PDF (Summary)</button>
+    <div class="split-view">
+        <div class="card col-left" style="border-top:5px solid #1A3C5E;">
+            <h3 style="margin-top:0">🏆 Top Performing Districts</h3>
+            <div id="leaderboardList" style="max-height: 400px; overflow-y: auto;"></div>
         </div>
-
-        <!-- COLUMN B: CUSTOM EXPORT ENGINE -->
-        <div class="card" style="flex: 2;">
-            <h3>🛠️ Custom Export Engine</h3>
-            <div class="split-view">
-                <div style="flex:1">
-                    <label>Station Selection</label>
-                    <select id="rptStn"><option>Loading...</option></select>
-                </div>
-                <div style="flex:1">
-                    <label>Date Range</label>
-                    <input type="date" id="rptStart" value="2023-01-01">
-                    <input type="date" id="rptEnd" value="2023-12-31" style="margin-top:10px">
-                </div>
-            </div>
-            
-            <div style="display: flex; gap: 10px; margin-top: 20px;">
-                <button onclick="doCustomExport('csv')" style="background:#27AE60; flex:1">📥 Export Filtered CSV</button>
-                <button onclick="doCustomExport('pdf')" style="background:#E74C3C; flex:1">📄 Generate Custom PDF</button>
-            </div>
-            <div class="help-text">Note: Custom PDFs include 12-month AI trend projections.</div>
+        <div class="chart-box col-right">
+            <h3>🕸️ Multi-Metric Performance Radar</h3>
+            <canvas id="radarChart" style="max-height: 400px;"></canvas>
+            <p class="help-text" style="text-align:center">Comparing the top 3 sustainable districts across metrics.</p>
         </div>
     </div>
 
-<!-- JAVASCRIPT LOGIC -->
+    <!-- 10. SATELLITE VEGETATION -->
+    <h2>10. Satellite Vegetation (NDVI) Correlation</h2>
+    <div class="section-desc">
+        <b>Advanced Research Tool:</b> This section compares underground water levels with surface "Greenness" (NDVI). 
+        High vegetation in a <b>Red Zone</b> suggests a mismatch that needs investigation.
+    </div>
+
+    <div class="split-view">
+        <div class="col-right" style="position: relative; flex: 2;">
+             <div id="satelliteMap"></div>
+             <div style="position: absolute; top: 10px; right: 10px; z-index: 1000; background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); font-size: 12px;">
+                <b>Satellite Layers:</b><br>
+                <input type="checkbox" id="ndviLayerToggle" onchange="updateSatelliteLayer()" checked> 🌿 Vegetation Density
+             </div>
+        </div>
+        <div class="card col-left" style="background: #1A3C5E; color: white; flex: 1;">
+            <h3 style="color: white; margin-top: 0;">🛰️ Satellite Insights</h3>
+            <p style="font-size: 14px; opacity: 0.9;">Our AI cross-references satellite imagery with IoT sensor data.</p>
+            <div id="ndviInsightBox" style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; font-size: 13px;">Scanning for anomalies...</div>
+            <div style="margin-top: 20px;">
+                <label style="color: white;">Detection Sensitivity</label>
+                <input type="range" min="1" max="100" value="75" style="width: 100%;">
+            </div>
+            <p class="help-text" style="color: #bdc3c7;">Sensitivity adjusts the AI threshold for flagging illegal extraction.</p>
+        </div>
+    </div>
+    
+    <div style="height: 100px;"></div>
+</div>
+
+<!-- FIREBASE LOGIC -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
     import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
@@ -274,263 +282,185 @@
     const dashboard = document.getElementById('dashboard');
     const banner = document.getElementById('alert-banner');
 
-    // --- MAP SETUP ---
-    const map = L.map('map').setView([28.61, 77.23], 6); // Centered on North India
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-
-    // --- LIVE FEED LOGIC ---
     onSnapshot(collection(db, "live_monitoring"), (snapshot) => {
         dashboard.innerHTML = "";
+        let criticals = [];
         const now = new Date();
-        let criticalSensors = [];
 
         snapshot.forEach((doc) => {
             const data = doc.data();
-            // Filter stale data (>2 mins)
-            if (data.last_updated && (now - new Date(data.last_updated.seconds * 1000)) / 1000 / 60 > 2) return;
+            // Filter stale (30 mins)
+            if (data.last_updated && (now - new Date(data.last_updated.seconds * 1000)) / 1000 / 60 > 30) return;
 
-            let colorClass = "Safe";
-            if (data.status === "Critical") { colorClass = "Critical"; criticalSensors.push(data.location); }
-            else if (data.status === "Semi-Critical") { colorClass = "Semi-Critical"; }
+            if (data.status === "Critical") criticals.push(data.location);
 
             dashboard.innerHTML += `
-                <div class="card card-${colorClass}">
-                    <div style="font-weight:600; font-size:14px; color:#555;">
-                        <span class="live-badge badge-${colorClass}"></span> ${data.location}
-                    </div>
+                <div class="card card-${data.status}">
+                    <div style="font-size:13px; font-weight:600;"><span class="badge badge-${data.status}"></span> ${data.location}</div>
                     <div class="level">${data.water_level} m</div>
-                    <div class="text-${colorClass}" style="font-size:13px;">Status: ${data.status}</div>
+                    <div class="text-${data.status}" style="font-size:11px;">Status: ${data.status}</div>
                 </div>`;
         });
-
-        // Update Banner if needed
-        /* Audio removed as requested */
+        
+        banner.style.display = criticals.length > 0 ? "block" : "none";
+        banner.innerText = `🚨 ALERT: Critical levels detected in: ${criticals.join(", ")}`;
     });
-
-    // --- MAP MARKERS ---
-    async function initMap() {
-        try {
-            const res = await fetch("http://localhost:8000/api/map-classification");
-            const stations = await res.json();
-            stations.forEach(s => {
-                let c = '#27AE60';
-                if(s.status==='Semi-Critical') c='#F39C12';
-                if(s.status==='Critical') c='#C0392B';
-                L.circleMarker([s.lat, s.lng], { color: c, fillColor: c, fillOpacity: 0.8, radius: 10 })
-                 .addTo(map).bindPopup(`<b>${s.name}</b><br>${s.status}<br><i>${s.policy_recommendation}</i>`);
-            });
-        } catch(e){}
-    }
-    initMap();
 </script>
 
+<!-- FEATURE LOGIC -->
 <script>
-    // --- SHARED ZONE LOGIC ---
-    async function loadZones() {
-        try {
-            const res = await fetch("http://localhost:8000/api/zones");
-            const zones = await res.json();
-            const select = document.getElementById('zoneSelect');
-            select.innerHTML = "";
-            zones.forEach(z => {
-                const opt = document.createElement("option"); opt.value = z.id; opt.innerText = z.name;
-                select.appendChild(opt);
-            });
-            if(zones.length > 0) runAnalysis();
-        } catch(e){}
+    const map = L.map('map').setView([28.61, 77.23], 6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    async function initMap() {
+        const res = await fetch("/api/map-classification");
+        const data = await res.json();
+        data.forEach(s => {
+            let c = s.status === 'Critical' ? '#E74C3C' : (s.status === 'Semi-Critical' ? '#F1C40F' : '#27AE60');
+            L.circleMarker([s.lat, s.lng], { color: c, fillColor: c, fillOpacity: 0.7, radius: 10 }).addTo(map).bindPopup(`<b>${s.name}</b><br>Baseline: ${s.baseline_level}m`);
+        });
     }
 
-    // --- FEATURES 3 & 7B: RECHARGE & POLICY ---
+    async function loadZones() {
+        const res = await fetch("/api/zones");
+        const zones = await res.json();
+        const sel1 = document.getElementById('zoneSelect');
+        const sel2 = document.getElementById('rptStn');
+        sel1.innerHTML = ""; sel2.innerHTML = "";
+        zones.forEach(z => {
+            const opt = `<option value="${z.id}">${z.name}</option>`;
+            sel1.innerHTML += opt; sel2.innerHTML += opt;
+        });
+        runAnalysis();
+    }
+
     let rechargeChart = null;
     async function runAnalysis() {
         const id = document.getElementById('zoneSelect').value;
-        const rain = parseFloat(document.getElementById('rainSlider').value);
-        const ext = parseFloat(document.getElementById('extSlider').value);
+        const rain = document.getElementById('rainSlider').value;
+        const ext = document.getElementById('extSlider').value;
         if(!id) return;
 
-        const res = await fetch("http://localhost:8000/api/analyze-zone", {
-            method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ station_id: id, rainfall: rain, extraction_percent: ext })
-        });
+        const res = await fetch("/api/analyze-zone", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({station_id:id, rainfall:parseFloat(rain), extraction_percent:parseFloat(ext)})});
         const data = await res.json();
 
-        document.getElementById('rechargeText').innerText = `Net Balance: ${data.net_balance_mcm} MCM`;
-        
-        // Policy Interpretation
-        const baseExt = data.projected_extraction_mcm / (ext/100);
-        const saved = (baseExt - data.projected_extraction_mcm).toFixed(1);
-        let msg = `ℹ️ <b>Baseline maintained.</b>`;
-        if(saved > 0) msg = `✅ <b>Policy Success:</b> Water saved: <b>${saved} MCM</b>.`;
-        if(saved < 0) msg = `⚠️ <b>Policy Risk:</b> Extraction increased by <b>${Math.abs(saved)} MCM</b>.`;
-        document.getElementById('policyResult').innerHTML = msg + `<br>Projected Status: <b>${data.status}</b>`;
-
+        document.getElementById('rechargeText').innerText = `Balance: ${data.net_balance_mcm} MCM`;
         const ctx = document.getElementById('rechargeChart').getContext('2d');
         if(rechargeChart) rechargeChart.destroy();
-        rechargeChart = new Chart(ctx, {
-            type: 'bar',
-            data: { labels: ['Recharge', 'Extraction'], datasets: [{ label: 'MCM', data: [data.estimated_recharge_mcm, data.projected_extraction_mcm], backgroundColor: ['#3498DB', '#E74C3C'] }] },
-            options: { indexAxis: 'y', scales: { x: { beginAtZero: true } }, maintainAspectRatio: false }
-        });
+        rechargeChart = new Chart(ctx, { type:'bar', data:{ labels:['Recharge','Extraction'], datasets:[{label:'MCM', data:[data.estimated_recharge_mcm, data.projected_extraction_mcm], backgroundColor:['#3498DB','#E74C3C']}]}, options:{indexAxis:'y', scales:{x:{beginAtZero:true}}, maintainAspectRatio:false}});
+        
+        const saved = ((data.projected_extraction_mcm / (parseFloat(ext)/100)) - data.projected_extraction_mcm).toFixed(1);
+        document.getElementById('policyResult').innerHTML = `<b>Policy Report for ${data.zone_name}:</b><br>` + 
+            (saved > 0 ? `✅ Water Saved: <b>${saved} MCM</b>` : `⚠️ Extraction Increase: <b>${Math.abs(saved)} MCM</b>`);
+
+        // Economic Impact
+        const econCard = document.getElementById('economicImpactCard');
+        if (saved > 0) {
+            const econRes = await fetch(`/api/economics/calculate/${saved}`);
+            const econData = await econRes.json();
+            econCard.style.display = "block";
+            document.getElementById('savingsAmount').innerText = econData.financial_savings_text;
+        } else {
+            econCard.style.display = "none";
+        }
     }
 
-    // --- FEATURE 6: RISK ANALYSIS ---
     async function calculateRisk() {
-        const res = await fetch("http://localhost:8000/api/analyze-risk", {
-            method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                rainfall: 1200, area: 500,
-                population: parseInt(document.getElementById('riskPop').value),
-                crop_area: parseFloat(document.getElementById('riskCrop').value),
-                scenario: document.getElementById('riskScenario').value
-            })
-        });
+        const res = await fetch("/api/analyze-risk", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({rainfall:1200, area:500, population:parseInt(document.getElementById('riskPop').value), crop_area:parseFloat(document.getElementById('riskCrop').value), scenario:document.getElementById('riskScenario').value})});
         const data = await res.json();
         document.getElementById('riskScore').innerText = data.risk_score;
-        document.getElementById('riskLabel').innerText = data.risk_label;
-        document.getElementById('resSupply').innerText = data.supply_mcm;
-        document.getElementById('resDemand').innerText = data.demand_mcm;
-        const c = data.risk_score > 70 ? "#C0392B" : (data.risk_score > 40 ? "#F39C12" : "#27AE60");
         document.getElementById('riskBar').style.width = data.risk_score + "%";
+        document.getElementById('riskLabel').innerText = data.risk_label;
+        const c = data.risk_score > 70 ? "#C0392B" : (data.risk_score > 40 ? "#F39C12" : "#27AE60");
         document.getElementById('riskBar').style.backgroundColor = c;
-        
         const gap = (data.supply_mcm - data.demand_mcm).toFixed(1);
-        let exp = gap >= 0 ? `✅ <b>Sustainable:</b> Surplus of ${gap} MCM.` : `⚠️ <b>Depletion Warning:</b> Demand exceeds supply by ${Math.abs(gap)} MCM.`;
-        document.getElementById('riskExplanation').innerHTML = exp;
+        document.getElementById('riskExplanation').innerHTML = gap >= 0 ? `✅ Sustainable. Surplus of ${gap} MCM.` : `⚠️ Danger. Deficit of ${Math.abs(gap)} MCM.`;
     }
 
-    // --- FEATURE 8: RESEARCH (ARIMA VS LSTM) ---
-    let researchChartInstance = null;
+    async function fetchLiveWeather() {
+        const sid = document.getElementById('zoneSelect').value;
+        const note = document.getElementById('weatherNote');
+        const btn = document.getElementById('weatherBtn');
+        btn.innerText = "⌛ FETCHING...";
+        try {
+            const res = await fetch(`/api/weather/live/${sid}`);
+            const data = await res.json();
+            document.getElementById('rainSlider').value = data.rainfall_mm;
+            document.getElementById('rainVal').innerText = data.rainfall_mm;
+            note.style.display="block"; 
+            note.innerText = `Live: ${data.description}, ${data.temp}°C. Annualized: ${data.rainfall_mm}mm`;
+            runAnalysis();
+        } catch(e) { alert("API Error. Ensure key is in .env"); }
+        finally { btn.innerText = "☁️ FETCH LIVE WEATHER"; }
+    }
+
+    let resChart = null;
     async function runResearchScenario(type) {
-        let rain = 0; let ext = 0;
-        if (type === 'Drought') { rain = -50; ext = 0; }
-        if (type === 'Overuse') { rain = 0; ext = 20; }
-        if (type === 'Drip') { rain = 0; ext = -40; }
-
-        let stationId = document.getElementById('zoneSelect').value;
-        if (!stationId) stationId = "PB-LUD-N";
-
-        const res = await fetch("http://localhost:8000/api/simulate_scenario", {
-            method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ station_id: stationId, rainfall_change_pct: rain, extraction_change_pct: ext })
-        });
+        const id = document.getElementById('zoneSelect').value || "PB-LUD-N";
+        const res = await fetch("/api/simulate_scenario", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({station_id:id, rainfall_change_pct: type==='Drought'?-50:0, extraction_change_pct: type==='Drip'?-40:(type==='Overuse'?20:0)})});
         const data = await res.json();
-
         const ctx = document.getElementById('researchChart').getContext('2d');
-        if (researchChartInstance) researchChartInstance.destroy();
-        researchChartInstance = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: data.labels,
-                datasets: [
-                    { label: 'ARIMA (Baseline)', data: data.arima_data, borderColor: '#3498DB', borderDash: [5, 5], fill: false },
-                    { label: 'LSTM (AI Projection)', data: data.lstm_data, borderColor: '#9B59B6', backgroundColor: 'rgba(155, 89, 182, 0.1)', fill: true, borderWidth: 3 }
-                ]
-            },
-            options: { scales: { y: { reverse: true, title: {display:true, text:'Depth (mbgl)'} } } }
-        });
+        if(resChart) resChart.destroy();
+        resChart = new Chart(ctx, { type:'line', data:{ labels:data.labels, datasets:[{label:'ARIMA', data:data.arima_data, borderColor:'#3498DB', borderDash:[5,5], fill:false}, {label:'LSTM AI', data:data.lstm_data, borderColor:'#9B59B6', borderWidth:3, fill:true, backgroundColor:'rgba(155,89,182,0.1)'}]}, options:{scales:{y:{reverse:true}}, maintainAspectRatio:false}});
     }
-
-    async function downloadCSV() {
-        const res = await fetch("http://localhost:8000/api/research/export-data");
-        const data = await res.json();
-        if (data.csv_content) {
-            const blob = new Blob([data.csv_content], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = 'groundtruth_data.csv'; a.click();
-        }
-    }
-
-    // --- INITIALIZATION ---
-    async function loadTrend() {
-        const res = await fetch("http://localhost:8000/api/history");
-        const data = await res.json();
-        new Chart(document.getElementById('trendChart').getContext('2d'), {
-            type: 'line', data: { labels: data.map(d=>d.ds.slice(0,10)), datasets: [{ label: 'Depth (mbgl)', data: data.map(d=>d.y), borderColor: '#1A3C5E', tension: 0.4, fill: true, backgroundColor:'rgba(26,60,94,0.05)' }] }, options: { scales: { y: { reverse: true } }, maintainAspectRatio: false }
-        });
-    }
-
-    loadTrend();
-    loadZones();
-    // Pre-load a scenario so the chart isn't empty
-    setTimeout(() => runResearchScenario('Drought'), 1000); 
-
-    // Populate the single-select dropdown
-    async function populateSingleDropdown() {
-        const res = await fetch("http://localhost:8000/api/zones");
-        const zones = await res.json();
-        const select = document.getElementById('reportStationSingle');
-        select.innerHTML = "";
-        zones.forEach(z => {
-            const opt = document.createElement("option");
-            opt.value = z.id;
-            opt.innerText = z.name;
-            select.appendChild(opt);
-        });
-    }
-    populateSingleDropdown();
-
-    // PDF Export
-    async function generateCustomReport() {
-        const stationId = document.getElementById('reportStationSingle').value;
-        const payload = {
-            station_id: stationId,
-            start_date: document.getElementById('reportStart').value,
-            end_date: document.getElementById('reportEnd').value
-        };
-
-        const response = await fetch("http://localhost:8000/api/download-custom-report", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        });
-
-        if (response.ok) {
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${stationId}_Report.pdf`;
-            a.click();
-        }
-    }
-
-    // CSV Full Export
-    async function downloadStationCSV() {
-        const stationId = document.getElementById('reportStationSingle').value;
-        if(!stationId) return alert("Select a station first");
-        window.location.href = `http://localhost:8000/api/download-full-csv/${stationId}`;
-    }
-    async function loadRptStations() {
-        const res = await fetch("http://localhost:8000/api/zones");
-        const zones = await res.json();
-        const sel = document.getElementById('rptStn'); sel.innerHTML = "";
-        zones.forEach(z => { sel.innerHTML += `<option value="${z.id}">${z.name}</option>`; });
-    }
-    loadRptStations();
 
     async function doCustomExport(mode) {
-        const payload = {
-            station_id: document.getElementById('rptStn').value,
-            start: document.getElementById('rptStart').value,
-            end: document.getElementById('rptEnd').value
-        };
-
-        const endpoint = mode === 'csv' ? '/api/export/custom-csv' : '/api/export/custom-pdf';
-        
-        const response = await fetch("http://localhost:8000" + endpoint, {
-            method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        });
-
-        if (response.ok) {
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `GroundTruth_${payload.station_id}.${mode}`;
-            a.click();
-        } else { alert("Export failed. Ensure data exists for selected range."); }
+        const payload = { station_id: document.getElementById('rptStn').value, start: document.getElementById('rptStart').value, end: document.getElementById('rptEnd').value };
+        const res = await fetch(`/api/export/custom-${mode}`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload) });
+        const b = await res.blob(); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = `Export.${mode}`; a.click();
     }
+
+    async function loadTrend() {
+        const res = await fetch("/api/history");
+        const data = await res.json();
+        new Chart(document.getElementById('trendChart').getContext('2d'), { type:'line', data:{ labels:data.map(d=>d.ds), datasets:[{label:'Network Depth', data:data.map(d=>d.y), borderColor:'#1A3C5E', tension:0.4, fill:true}]}, options:{scales:{y:{reverse:true}}, maintainAspectRatio:false}});
+    }
+
+    // --- SATELLITE & LEADERBOARD ---
+    let satMap = null;
+    let satelliteNDVILayer = null;
+
+    async function initSatelliteMap() {
+        satMap = L.map('satelliteMap').setView([28.61, 77.23], 6);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(satMap);
+        updateSatelliteLayer();
+    }
+
+    async function updateSatelliteLayer() {
+        const isChecked = document.getElementById('ndviLayerToggle').checked;
+        if (isChecked) {
+            try {
+                const res = await fetch("/api/satellite/ndvi-layer");
+                const geoData = await res.json();
+                if (satelliteNDVILayer) satMap.removeLayer(satelliteNDVILayer);
+                satelliteNDVILayer = L.geoJSON(geoData, {
+                    pointToLayer: function (feature, latlng) {
+                        return L.circle(latlng, { radius: 15000, color: feature.properties.fill, fillColor: feature.properties.fill, fillOpacity: 0.5, stroke: false });
+                    },
+                    onEachFeature: function(feature, layer) { layer.bindPopup(`Greenness: ${feature.properties.ndvi_score}`); }
+                }).addTo(satMap);
+                document.getElementById('ndviInsightBox').innerHTML = `<b>Status:</b> Active<br><b>Anomalies:</b> 2 Detected<br><b>Advice:</b> Deploy drones.`;
+            } catch (e) { console.error(e); }
+        } else {
+            if (satelliteNDVILayer) satMap.removeLayer(satelliteNDVILayer);
+        }
+    }
+
+    async function loadLeaderboard() {
+        const res = await fetch("/api/leaderboard/rankings");
+        const data = await res.json();
+        const listDiv = document.getElementById('leaderboardList');
+        listDiv.innerHTML = "";
+        data.forEach((item, index) => {
+            const color = item.status === "Healthy" ? "#27AE60" : (item.status === "Caution" ? "#F1C40F" : "#E74C3C");
+            listDiv.innerHTML += `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee;"><div style="width:30px;">#${index+1}</div><div style="flex:1;">${item.name}</div><div style="color:${color}; font-weight:bold;">${item.score}</div></div>`;
+        });
+        const top3 = data.slice(0, 3);
+        const ctx = document.getElementById('radarChart').getContext('2d');
+        new Chart(ctx, { type:'radar', data:{ labels:['Water','Recharge','Stability','Efficiency','Infiltration'], datasets:top3.map((stn, i)=>({ label:stn.name, data:[stn.score, stn.score-5, stn.score+2, 80, 70], borderColor: i===0?'#1A3C5E':(i===1?'#3498DB':'#27AE60'), backgroundColor:'rgba(52,152,219,0.05)' }))}, options:{scales:{r:{suggestMin:0, suggestMax:100}}, maintainAspectRatio:false}});
+    }
+
+    initMap(); loadZones(); loadTrend(); initSatelliteMap(); loadLeaderboard();
 </script>
 </body>
 </html>

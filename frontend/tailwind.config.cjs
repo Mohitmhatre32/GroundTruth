@@ -9,7 +9,7 @@ module.exports = {
       colors: {
         primary: '#027598',     // Deep Soft Teal-Blue (Headers/Nav/Active States)
         secondary: '#dbb432',   // Dark Mustard Yellow (Highlights/Accents)
-        background: '#cce3faff',  // Soft Grey (Global Background)
+        background: '#f8fafc',  // Slate 50 (Neutral Background)
         surface: '#FFFFFF',     // Cards / Panels / Modals
         textMain: '#243A40',    // Main Headings
         textMuted: '#6B7C83',   // Subtitles / Meta data
@@ -18,7 +18,7 @@ module.exports = {
         danger: '#C96A6A',      // Critical Zone / Alerts
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'], // Use for clean readability
+        sans: ['Manrope', 'sans-serif'], // Universal typeface - Manrope
       },
       animation: {
         'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite', // For Live Badges
