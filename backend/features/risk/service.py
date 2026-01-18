@@ -15,6 +15,7 @@ def calculate_risk_assessment(rainfall_mm, area_sq_km, population, crop_area_sq_
     AGRI_WATER_REQ = 450  # mm per year for crops
     INDUSTRIAL_FACTOR = 0.15  # 15% of domestic demand for industry
     INFILTRATION_RATE = 0.15  # 15% of rainfall recharges groundwater
+    SURFACE_CAPTURE_RATE = 0.25 # 25% of rainfall captured in surface bodies
     EVAPORATION_LOSS = 0.10  # 10% loss due to evaporation
     
     # ============================================================================
@@ -23,6 +24,7 @@ def calculate_risk_assessment(rainfall_mm, area_sq_km, population, crop_area_sq_
     eff_rain = rainfall_mm
     eff_agri = AGRI_WATER_REQ
     eff_infiltration = INFILTRATION_RATE
+    eff_surface_capture = SURFACE_CAPTURE_RATE
     eff_evaporation = EVAPORATION_LOSS
     scenario_impact = ""
     
@@ -37,6 +39,7 @@ def calculate_risk_assessment(rainfall_mm, area_sq_km, population, crop_area_sq_
     elif scenario_lower == "flood":
         eff_rain *= 1.4  # 40% more rainfall
         eff_infiltration *= 0.8  # But 20% less infiltration (runoff)
+        eff_surface_capture *= 1.2 # More surface water available
         scenario_impact = "Excess rainfall but reduced recharge due to runoff"
         
     elif scenario_lower == "climate_change" or scenario_lower == "climatechange":
@@ -56,9 +59,12 @@ def calculate_risk_assessment(rainfall_mm, area_sq_km, population, crop_area_sq_
     # ============================================================================
     # SUPPLY CALCULATION (Income/Recharge)
     # ============================================================================
-    gross_recharge = area_sq_km * eff_rain * eff_infiltration  # mm·km²
-    evaporation_loss = gross_recharge * eff_evaporation
-    net_recharge_mcm = (gross_recharge - evaporation_loss) / 1000.0  # Convert to MCM
+    # Combined Ground + Surface water availability
+    total_capture_rate = eff_infiltration + eff_surface_capture
+    gross_water_available = area_sq_km * eff_rain * total_capture_rate  # mm·km²
+    
+    evaporation_loss = gross_water_available * eff_evaporation
+    net_recharge_mcm = (gross_water_available - evaporation_loss) / 1000.0  # Convert to MCM
     
     # ============================================================================
     # DEMAND CALCULATION (Expenses/Extraction)
@@ -92,7 +98,8 @@ def calculate_risk_assessment(rainfall_mm, area_sq_km, population, crop_area_sq_
         # ratio 0.8-1.2 = Moderate
         # ratio 1.2-1.5 = High
         # ratio > 1.5 = Critical
-        risk_score = min(max((ratio - 0.5) * 100, 0), 100)
+        # Adjusted sensitivity: Max risk at ratio 2.0 instead of 1.5
+        risk_score = min(max((ratio - 0.5) * 66.6, 0), 100)
     
     # Risk label
     if risk_score >= 90:
@@ -133,7 +140,7 @@ def calculate_risk_assessment(rainfall_mm, area_sq_km, population, crop_area_sq_
     return {
         # Supply breakdown
         "supply_mcm": round(net_recharge_mcm, 2),
-        "gross_recharge_mcm": round(gross_recharge / 1000.0, 2),
+        "gross_recharge_mcm": round(gross_water_available / 1000.0, 2),
         "evaporation_loss_mcm": round(evaporation_loss / 1000.0, 2),
         
         # Demand breakdown

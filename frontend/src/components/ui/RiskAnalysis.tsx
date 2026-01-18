@@ -39,10 +39,10 @@ interface RiskResultExtended {
 }
 
 const RiskAnalysis = () => {
-    const [population, setPopulation] = useState<number>(2000000);
-    const [cropArea, setCropArea] = useState<number>(300);
+    const [population, setPopulation] = useState<number>(500000);
+    const [cropArea, setCropArea] = useState<number>(150);
     const [rainfall, setRainfall] = useState<number>(800);
-    const [area, setArea] = useState<number>(500);
+    const [area, setArea] = useState<number>(800);
     const [scenario, setScenario] = useState<string>('normal');
     const [result, setResult] = useState<RiskResultExtended | null>(null);
     const [loading, setLoading] = useState(false);
