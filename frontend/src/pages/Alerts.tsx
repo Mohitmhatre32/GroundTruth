@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { AlertTriangle, AlertCircle, Info, CheckCircle, Clock, MapPin, Droplets } from 'lucide-react';
 import { toast } from 'sonner';
-import { getMapClassification, ClassificationResult } from '../services/api';
+import { getAlerts, AlertRecord } from '../services/api';
 
 interface Alert {
     id: string;
@@ -22,40 +22,33 @@ const Alerts = () => {
     useEffect(() => {
         const fetchAlerts = async () => {
             try {
-                const data: ClassificationResult[] = await getMapClassification();
+                const data: AlertRecord[] = await getAlerts();
 
-                // Generate alerts from station data
-                const generatedAlerts: Alert[] = data.map(station => {
+                // Map backend alerts to frontend local state
+                const mappedAlerts: Alert[] = data.map(record => {
+                    const typeLower = record.type.toLowerCase();
                     let type: Alert['type'] = 'info';
-                    let message = '';
 
-                    if (station.status === 'Critical') {
-                        type = 'critical';
-                        message = `CRITICAL: Water level at ${station.baseline_level.toFixed(1)}m - Immediate attention required!`;
-                    } else if (station.status === 'Semi-Critical') {
-                        type = 'warning';
-                        message = `WARNING: Water level at ${station.baseline_level.toFixed(1)}m - Monitoring recommended`;
-                    } else {
-                        type = 'success';
-                        message = `Water level stable at ${station.baseline_level.toFixed(1)}m - Normal operation`;
-                    }
+                    if (typeLower === 'critical') type = 'critical';
+                    else if (typeLower === 'warning') type = 'warning';
+                    else if (typeLower === 'success') type = 'success';
 
                     return {
-                        id: station.id,
-                        stationName: station.name,
+                        id: record.alert_id,
+                        stationName: record.location,
                         type,
-                        message,
-                        waterLevel: station.baseline_level,
-                        timestamp: new Date().toLocaleString(),
-                        location: `${station.lat.toFixed(4)}, ${station.lng.toFixed(4)}`
+                        message: record.message,
+                        waterLevel: record.water_level,
+                        timestamp: new Date(record.timestamp).toLocaleString(),
+                        location: record.location
                     };
                 });
 
-                setAlerts(generatedAlerts);
+                setAlerts(mappedAlerts);
                 setLoading(false);
             } catch (error) {
                 console.error('Error fetching alerts:', error);
-                toast.error('Failed to load alerts');
+                toast.error('Failed to load real alerts');
                 setLoading(false);
             }
         };
@@ -175,31 +168,27 @@ const AlertCard = ({ alert, index }: { alert: Alert; index: number }) => {
     const config = {
         critical: {
             icon: AlertTriangle,
-            gradient: 'from-red-500/10 via-rose-500/5 to-transparent',
-            border: 'border-red-200/50',
-            bg: 'bg-gradient-to-br from-red-50 to-rose-50/30',
-            iconColor: 'text-danger'
+            accent: 'border-l-danger',
+            iconBg: 'bg-danger/10 text-danger',
+            subText: 'text-danger'
         },
         warning: {
             icon: AlertCircle,
-            gradient: 'from-amber-500/10 via-yellow-500/5 to-transparent',
-            border: 'border-amber-200/50',
-            bg: 'bg-gradient-to-br from-amber-50 to-yellow-50/30',
-            iconColor: 'text-warning'
+            accent: 'border-l-warning',
+            iconBg: 'bg-warning/10 text-warning',
+            subText: 'text-warning'
         },
         info: {
             icon: Info,
-            gradient: 'from-blue-500/10 via-cyan-500/5 to-transparent',
-            border: 'border-blue-200/50',
-            bg: 'bg-gradient-to-br from-blue-50 to-cyan-50/30',
-            iconColor: 'text-primary'
+            accent: 'border-l-primary',
+            iconBg: 'bg-primary/10 text-primary',
+            subText: 'text-primary'
         },
         success: {
             icon: CheckCircle,
-            gradient: 'from-emerald-500/10 via-green-500/5 to-transparent',
-            border: 'border-emerald-200/50',
-            bg: 'bg-gradient-to-br from-emerald-50 to-green-50/30',
-            iconColor: 'text-success'
+            accent: 'border-l-success',
+            iconBg: 'bg-success/10 text-success',
+            subText: 'text-success'
         }
     };
 
@@ -208,52 +197,71 @@ const AlertCard = ({ alert, index }: { alert: Alert; index: number }) => {
 
     return (
         <motion.div
-            initial={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.05 }}
-            className={`${alertConfig.bg} border ${alertConfig.border} rounded-xl p-6 shadow-sm hover:shadow-md transition-all`}
+            transition={{ delay: index * 0.03 }}
+            className={`surface-card border-l-4 ${alertConfig.accent} p-4 md:p-6 group`}
         >
-            <div className="flex items-start gap-4">
-                <div className={`p-3 rounded-xl ${alertConfig.bg} border ${alertConfig.border}`}>
-                    <Icon className={`w-6 h-6 ${alertConfig.iconColor}`} />
+            <div className="flex flex-col md:flex-row items-start gap-5">
+                {/* Fixed Icon Container - Sharp & Industrial */}
+                <div className={`flex-shrink-0 p-3 rounded-xl ${alertConfig.iconBg} border border-white/40 shadow-sm`}>
+                    <Icon className="w-6 h-6" />
                 </div>
 
-                <div className="flex-1">
-                    <div className="flex items-start justify-between mb-2">
-                        <div>
-                            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                                <MapPin className="w-4 h-4" />
+                {/* Content Area */}
+                <div className="flex-1 min-w-0">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
+                        <div className="flex items-center gap-2">
+                            <h3 className="text-lg font-black text-slate-900 tracking-tight">
                                 {alert.stationName}
                             </h3>
-                            <p className={`text-sm mt-1 ${alert.type === 'critical' ? 'text-danger font-semibold' :
-                                alert.type === 'warning' ? 'text-warning font-semibold' :
-                                    'text-textMuted'
-                                }`}>
-                                {alert.message}
-                            </p>
+                            <span className="text-[10px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded uppercase">
+                                {alert.id.substring(0, 6)}
+                            </span>
                         </div>
 
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${alert.type === 'critical' ? 'bg-danger/20 text-danger' :
-                            alert.type === 'warning' ? 'bg-warning/20 text-warning' :
-                                alert.type === 'success' ? 'bg-success/20 text-success' :
-                                    'bg-primary/20 text-primary'
-                            }`}>
-                            {alert.type}
-                        </span>
+                        <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                                <Clock size={12} />
+                                {alert.timestamp}
+                            </span>
+                            <div className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${alertConfig.iconBg}`}>
+                                {alert.type}
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="flex items-center gap-6 text-sm text-textMuted mt-3">
-                        <div className="flex items-center gap-2">
-                            <Droplets className="w-4 h-4" />
-                            <span>{alert.waterLevel.toFixed(1)}m</span>
+                    <p className={`text-sm leading-relaxed ${alertConfig.subText} font-medium opacity-90`}>
+                        {alert.message}
+                    </p>
+
+                    {/* Metadata Row - Grounded Style */}
+                    <div className="mt-5 pt-4 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="flex items-center gap-2 text-slate-500">
+                            <div className="p-1.5 rounded-lg glass-dark">
+                                <Droplets size={14} className="text-primary" />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Level</span>
+                                <span className="text-xs font-black text-slate-700">{alert.waterLevel.toFixed(1)}m</span>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <Clock className="w-4 h-4" />
-                            <span>{alert.timestamp}</span>
+
+                        <div className="flex items-center gap-2 text-slate-500">
+                            <div className="p-1.5 rounded-lg glass-dark">
+                                <MapPin size={14} className="text-slate-500" />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Coordinates</span>
+                                <span className="text-xs font-mono text-slate-700">{alert.location}</span>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <MapPin className="w-4 h-4" />
-                            <span className="text-xs">{alert.location}</span>
+
+                        <div className="flex items-center justify-end sm:col-start-3">
+                            <button className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline flex items-center gap-1 group/btn">
+                                View History
+                                <motion.span animate={{ x: [0, 2, 0] }} transition={{ repeat: Infinity, duration: 1 }}>→</motion.span>
+                            </button>
                         </div>
                     </div>
                 </div>

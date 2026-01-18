@@ -1,6 +1,6 @@
 import { ReactNode, useState } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
-import { LayoutDashboard, LineChart, FlaskConical, AlertTriangle, Bell, Search, User, FileText, Activity, Shield, Menu, X } from 'lucide-react';
+import { LayoutDashboard, LineChart, FlaskConical, AlertTriangle, Bell, Search, User, FileText, Activity, Shield, Menu, X, Droplets } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import AnimatedBackground from '../AnimatedBackground';
@@ -15,69 +15,63 @@ const AppLayout = () => {
             {/* Animated Background */}
             <AnimatedBackground />
             <motion.aside
-                className="hidden md:flex bg-white/80 backdrop-blur-md border-r border-gray-200/50 flex-col shadow-sm z-10"
+                className="hidden md:flex bg-[#0a1f29] flex-col z-20 border-r border-slate-800 shadow-2xl"
                 initial={{ width: '75px' }}
-                animate={{ width: sidebarOpen ? '256px' : '75px' }}
+                animate={{ width: sidebarOpen ? '260px' : '75px' }}
                 onMouseEnter={() => setSidebarOpen(true)}
                 onMouseLeave={() => setSidebarOpen(false)}
                 transition={{ duration: 0.3, ease: 'easeInOut' }}
             >
-                {/* Logo Section */}
-                <div className="p-6 border-b border-gray-100/50">
-                    <motion.h1
-                        className="text-2xl font-bold text-primary tracking-tight overflow-hidden whitespace-nowrap"
-                        animate={{
-                            opacity: sidebarOpen ? 1 : 0,
-                            display: sidebarOpen ? 'block' : 'none'
-                        }}
+                {/* Logo Section - Dark Mode */}
+                <div className="p-6 border-b border-white/5">
+                    <motion.div
+                        className="flex items-center gap-3"
+                        animate={{ justifyContent: sidebarOpen ? 'flex-start' : 'center' }}
                     >
-                        GroundTruth
-                    </motion.h1>
-                    {!sidebarOpen && (
-                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold">
-                            G
+                        <div className="p-1.5 rounded-lg bg-primary/20 text-primary">
+                            <Droplets size={24} strokeWidth={2.5} />
                         </div>
-                    )}
-                    <motion.p
-                        className="text-xs text-textMuted mt-1"
-                        animate={{
-                            opacity: sidebarOpen ? 1 : 0,
-                            display: sidebarOpen ? 'block' : 'none'
-                        }}
-                    >
-                        Groundwater Resource Eval
-                    </motion.p>
+                        <motion.h1
+                            className="text-xl font-black text-white tracking-widest uppercase overflow-hidden whitespace-nowrap"
+                            animate={{
+                                opacity: sidebarOpen ? 1 : 0,
+                                display: sidebarOpen ? 'block' : 'none'
+                            }}
+                        >
+                            Subterra
+                        </motion.h1>
+                    </motion.div>
                 </div>
 
-                {/* Navigation */}
-                <nav className="flex-1 p-4 space-y-1 overflow-y-auto overflow-x-hidden">
-                    <NavItem to="/dashboard" icon={<LayoutDashboard size={20} />} label="Command Center" isOpen={sidebarOpen} />
-                    <NavItem to="/real-time" icon={<Activity size={20} />} label="Real Time Center" isOpen={sidebarOpen} />
-                    <NavItem to="/simulation" icon={<FlaskConical size={20} />} label="Simulation Lab" isOpen={sidebarOpen} />
+                {/* Navigation - Dark Mode Styling */}
+                <nav className="flex-1 p-4 space-y-2 overflow-y-auto overflow-x-hidden pt-8">
+                    <NavItem to="/dashboard" icon={<LayoutDashboard size={18} />} label="Command Center" isOpen={sidebarOpen} />
+                    <NavItem to="/real-time" icon={<Activity size={18} />} label="Live Station Feed" isOpen={sidebarOpen} />
+                    <NavItem to="/simulation" icon={<FlaskConical size={18} />} label="Simulation Lab" isOpen={sidebarOpen} />
 
                     {sidebarOpen && (
-                        <div className="pt-4 pb-2">
-                            <p className="px-3 text-xs font-semibold text-textMuted uppercase tracking-wider">Analytics</p>
+                        <div className="pt-6 pb-2">
+                            <p className="px-4 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Analytics</p>
                         </div>
                     )}
 
-                    <NavItem to="/analytics" icon={<LineChart size={20} />} label="Analytics & Forecasting" isOpen={sidebarOpen} />
-                    <NavItem to="/policy" icon={<Shield size={20} />} label="Policy & Regulation" isOpen={sidebarOpen} />
+                    <NavItem to="/analytics" icon={<LineChart size={18} />} label="Forecasting" isOpen={sidebarOpen} />
+                    <NavItem to="/policy" icon={<Shield size={18} />} label="Regulations" isOpen={sidebarOpen} />
 
                     {sidebarOpen && (
-                        <div className="pt-4 pb-2">
-                            <p className="px-3 text-xs font-semibold text-textMuted uppercase tracking-wider">System</p>
+                        <div className="pt-6 pb-2">
+                            <p className="px-4 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Intelligence</p>
                         </div>
                     )}
 
-                    <NavItem to="/reports" icon={<FileText size={20} />} label="Reports" isOpen={sidebarOpen} />
-                    <NavItem to="/alerts" icon={<AlertTriangle size={20} />} label="Alerts" isOpen={sidebarOpen} />
+                    <NavItem to="/reports" icon={<FileText size={18} />} label="Archived Reports" isOpen={sidebarOpen} />
+                    <NavItem to="/alerts" icon={<AlertTriangle size={18} />} label="System Alerts" isOpen={sidebarOpen} />
                 </nav>
 
-                {/* User Section */}
-                <div className="p-4 border-t border-gray-100/50 space-y-3">
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm shrink-0">
+                {/* User Section - Dark Mode Footer */}
+                <div className="p-4 border-t border-white/5 bg-slate-900/50">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center text-white font-black text-xs shrink-0 shadow-lg shadow-primary/20">
                             {user?.name ? user.name.charAt(0) : 'U'}
                         </div>
                         <motion.div
@@ -87,22 +81,22 @@ const AppLayout = () => {
                                 display: sidebarOpen ? 'block' : 'none'
                             }}
                         >
-                            <p className="text-sm font-medium text-textMain truncate">{user?.name || 'User'}</p>
-                            <p className="text-xs text-textMuted truncate">{user?.role || 'Official'}</p>
+                            <p className="text-xs font-black text-white truncate uppercase tracking-tight">{user?.name || 'Admin User'}</p>
+                            <p className="text-[10px] font-bold text-slate-500 truncate uppercase tracking-widest">{user?.role || 'Super Admin'}</p>
                         </motion.div>
                     </div>
                     <button
                         onClick={logout}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-danger hover:bg-danger/10 rounded-lg transition-colors"
+                        className="w-full flex items-center gap-3 px-3 py-2.5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-danger hover:bg-danger/5 rounded-lg transition-all group"
                     >
-                        <User size={16} className="shrink-0" />
+                        <User size={14} className="shrink-0 group-hover:scale-110 transition-transform" />
                         <motion.span
                             animate={{
                                 opacity: sidebarOpen ? 1 : 0,
                                 display: sidebarOpen ? 'inline-block' : 'none'
                             }}
                         >
-                            Log Out
+                            Sign Out
                         </motion.span>
                     </button>
                 </div>
@@ -117,7 +111,7 @@ const AppLayout = () => {
                             animate={{ x: 0, opacity: 1 }}
                             exit={{ x: '-100%', opacity: 0 }}
                             transition={{ duration: 0.3, ease: 'easeInOut' }}
-                            className="fixed inset-0 bg-white dark:bg-neutral-900 z-[100] flex flex-col"
+                            className="fixed inset-0 bg-white/90 backdrop-blur-xl z-[100] flex flex-col"
                         >
                             <div className="p-6 border-b border-gray-100/50 flex items-center justify-between">
                                 <h1 className="text-2xl font-bold text-primary tracking-tight">GroundTruth</h1>
@@ -171,31 +165,31 @@ const AppLayout = () => {
 
             {/* Main Content */}
             <main className="flex-1 flex flex-col min-w-0 bg-transparent relative">
-                {/* Top Header */}
-                <header className="h-16 bg-white/70 backdrop-blur-md border-b border-gray-200/50 flex items-center justify-between px-6 shadow-sm z-10">
+                {/* Top Header - Sharp & Solid */}
+                <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-10">
                     {/* Mobile Menu Button */}
                     <button
-                        className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        className="md:hidden p-2 hover:bg-slate-100 rounded-lg transition-colors"
                         onClick={() => setMobileSidebarOpen(true)}
                     >
-                        <Menu size={24} />
+                        <Menu size={20} className="text-slate-600" />
                     </button>
 
                     <div className="flex items-center gap-4 flex-1 max-w-xl">
                         <div className="relative w-full max-w-md">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-textMuted" size={18} />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                             <input
                                 type="text"
-                                placeholder="Search Station, District, or Alert..."
-                                className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                                placeholder="Search Intel..."
+                                className="w-full pl-10 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-slate-300"
                             />
                         </div>
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <button className="relative p-2 rounded-full hover:bg-gray-100 text-textMuted hover:text-primary transition-colors">
-                            <Bell size={20} />
-                            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-danger rounded-full animate-pulse"></span>
+                        <button className="relative p-2 rounded-xl hover:bg-slate-50 text-slate-400 hover:text-primary transition-all">
+                            <Bell size={18} />
+                            <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-danger rounded-full ring-2 ring-white"></span>
                         </button>
                     </div>
                 </header>
@@ -215,19 +209,19 @@ const NavItem = ({ to, icon, label, isOpen, onClick }: { to: string, icon: React
             to={to}
             onClick={onClick}
             className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group ${isActive
-                    ? 'bg-primary/10 text-primary shadow-sm'
-                    : 'text-textMuted hover:bg-gray-50 hover:text-textMain'
+                `flex items-center gap-3 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-200 group ${isActive
+                    ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                    : 'text-slate-500 hover:text-white hover:bg-white/5'
                 }`
             }
         >
-            <span className="shrink-0">{icon}</span>
+            <span className="shrink-0 transition-transform group-hover:scale-110">{icon}</span>
             <motion.span
                 animate={{
                     opacity: isOpen ? 1 : 0,
                     display: isOpen ? 'inline-block' : 'none'
                 }}
-                className="whitespace-pre group-hover:translate-x-1 transition-transform duration-150"
+                className="whitespace-pre transition-all"
             >
                 {label}
             </motion.span>

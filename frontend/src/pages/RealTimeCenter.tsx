@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, TrendingDown, Activity, Radio, Waves, MapPin } from 'lucide-react';
+import { TrendingUp, TrendingDown, Activity, Radio, Clock, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 import { getMapClassification, ClassificationResult } from '../services/api';
 
@@ -138,25 +138,22 @@ const StationCard = ({
 
     const statusConfig = {
         safe: {
-            gradient: 'from-emerald-500/10 via-green-500/5 to-transparent',
-            border: 'border-emerald-200/50',
-            glow: 'shadow-emerald-500/20',
+            accent: 'border-l-success',
             icon: 'text-success',
-            bg: 'bg-gradient-to-br from-emerald-50 to-green-50/30'
+            dot: 'bg-success',
+            progress: 'bg-success'
         },
         warning: {
-            gradient: 'from-amber-500/10 via-yellow-500/5 to-transparent',
-            border: 'border-amber-200/50',
-            glow: 'shadow-amber-500/20',
+            accent: 'border-l-warning',
             icon: 'text-warning',
-            bg: 'bg-gradient-to-br from-amber-50 to-yellow-50/30'
+            dot: 'bg-warning',
+            progress: 'bg-warning'
         },
         critical: {
-            gradient: 'from-red-500/10 via-rose-500/5 to-transparent',
-            border: 'border-red-200/50',
-            glow: 'shadow-red-500/20',
+            accent: 'border-l-danger',
             icon: 'text-danger',
-            bg: 'bg-gradient-to-br from-red-50 to-rose-50/30'
+            dot: 'bg-danger',
+            progress: 'bg-danger'
         }
     };
 
@@ -166,114 +163,102 @@ const StationCard = ({
     return (
         <motion.div
             ref={cardRef}
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
             transition={{
-                duration: 0.5,
+                duration: 0.4,
                 delay: index * 0.05,
-                ease: [0.22, 1, 0.36, 1]
+                ease: "easeOut"
             }}
             onMouseMove={handleMouseMove}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             onClick={onClick}
-            className={`relative group cursor-pointer overflow-hidden rounded-2xl transition-all duration-300 ${isSelected ? 'ring-2 ring-primary ring-offset-2 scale-[1.02]' : ''
-                }`}
+            className={`group cursor-pointer rounded-2xl transition-all duration-300 ${isSelected ? 'ring-2 ring-primary ring-offset-4' : ''}`}
         >
-            {/* Spotlight Effect */}
-            {isHovered && (
-                <div
-                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-10"
-                    style={{
-                        background: `radial-gradient(600px circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(59, 130, 246, 0.08), transparent 40%)`,
-                    }}
-                />
-            )}
+            <div className={`relative surface-card border-l-4 ${config.accent} p-5 flex flex-col h-full overflow-hidden`}>
 
-            {/* Card Background with Gradient */}
-            <div className={`relative ${config.bg} backdrop-blur-xl border ${config.border} rounded-2xl p-6 hover:border-primary/30 transition-all duration-500 shadow-lg hover:shadow-2xl ${config.glow} hover:-translate-y-1`}>
+                {/* Subtle Industrial Background Hint - Reduced "Whitishness" */}
+                <div className="absolute inset-0 bg-slate-50/30 -z-10 group-hover:bg-slate-50/50 transition-colors" />
 
-                {/* Status Indicator Dot */}
-                <div className="absolute top-4 right-4">
+                {/* Header Section */}
+                <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                        <div className="p-2 rounded-lg glass-dark text-slate-600">
+                            <MapPin size={16} />
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-slate-900 group-hover:text-primary transition-colors truncate max-w-[150px]">
+                                {station.name}
+                            </h3>
+                            <p className="text-[10px] font-mono text-slate-400 uppercase tracking-tighter">
+                                ID: {station.id.substring(0, 8)}
+                            </p>
+                        </div>
+                    </div>
+
                     <motion.div
-                        className={`w-3 h-3 rounded-full ${station.status === 'critical' ? 'bg-danger' : station.status === 'warning' ? 'bg-warning' : 'bg-success'}`}
-                        animate={{
-                            scale: station.status === 'critical' ? [1, 1.3, 1] : 1,
-                            opacity: station.status === 'critical' ? [1, 0.5, 1] : 1
-                        }}
-                        transition={{
-                            duration: 2,
-                            repeat: station.status === 'critical' ? Infinity : 0
-                        }}
+                        className={`w-2.5 h-2.5 rounded-full ${config.dot} shadow-[0_0_8px_rgba(0,0,0,0.1)]`}
+                        animate={station.status === 'critical' ? {
+                            scale: [1, 1.4, 1],
+                            boxShadow: ["0 0 0px var(--danger)", "0 0 12px var(--danger)", "0 0 0px var(--danger)"]
+                        } : {}}
+                        transition={{ duration: 1.5, repeat: Infinity }}
                     />
                 </div>
 
-                {/* Station Header */}
-                <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                            <MapPin className="w-4 h-4 text-primary" />
-                            <h3 className="font-bold text-slate-900 text-lg truncate">
-                                {station.name}
-                            </h3>
-                        </div>
-                        <p className="text-xs text-textMuted">
-                            ID: {station.id.substring(0, 8)}...
-                        </p>
-                    </div>
-                </div>
-
-                {/* Water Level Display */}
-                <div className="mb-4">
-                    <div className="flex items-end gap-2 mb-2">
-                        <Waves className={`w-5 h-5 ${config.icon}`} />
-                        <span className="text-3xl font-black bg-gradient-to-br from-slate-900 to-slate-700 bg-clip-text text-transparent">
+                {/* Main Metric */}
+                <div className="flex-1 py-2">
+                    <div className="flex items-baseline gap-1">
+                        <span className="text-4xl font-black text-slate-900 tracking-tight leading-none">
                             {station.waterLevel.toFixed(1)}
                         </span>
-                        <span className="text-sm text-textMuted mb-1">meters</span>
+                        <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">m</span>
                     </div>
 
-                    {/* Progress Bar */}
-                    <div className="relative h-2 bg-slate-200 rounded-full overflow-hidden">
-                        <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${Math.min((station.waterLevel / 100) * 100, 100)}%` }}
-                            transition={{ duration: 1, delay: index * 0.05 }}
-                            className={`absolute inset-y-0 left-0 rounded-full ${station.status === 'critical' ? 'bg-gradient-to-r from-red-500 to-rose-500' :
-                                station.status === 'warning' ? 'bg-gradient-to-r from-amber-500 to-yellow-500' :
-                                    'bg-gradient-to-r from-emerald-500 to-green-500'
-                                }`}
-                        />
+                    {/* Water Graphic Progress - Less AI, More Clean */}
+                    <div className="mt-4 mb-2 space-y-1.5">
+                        <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                            <span>Level Depth</span>
+                            <span>{Math.round(Math.min((station.waterLevel / 100) * 100, 100))}%</span>
+                        </div>
+                        <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200/50">
+                            <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${Math.min((station.waterLevel / 100) * 100, 100)}%` }}
+                                transition={{ duration: 1, ease: "circOut" }}
+                                className={`h-full ${config.progress}`}
+                            />
+                        </div>
                     </div>
                 </div>
 
-                {/* Stats Row */}
-                <div className="flex items-center justify-between pt-4 border-t border-slate-200/50">
-                    <div className="flex items-center gap-2">
-                        <TrendIcon className={`w-4 h-4 ${station.trend === 'up' ? 'text-success' :
-                            station.trend === 'down' ? 'text-danger' :
-                                'text-textMuted'
-                            }`} />
-                        <span className="text-xs font-medium text-textMuted capitalize">
-                            {station.trend || 'stable'}
+                {/* Footer Section */}
+                <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
+                    <div className={`flex items-center gap-1.5 px-2 py-1 rounded-md glass-dark ${station.trend === 'up' ? 'text-success' :
+                        station.trend === 'down' ? 'text-danger' : 'text-slate-500'
+                        }`}>
+                        <TrendIcon size={14} />
+                        <span className="text-[10px] font-bold uppercase tracking-wider">{station.trend || 'stable'}</span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 text-slate-400">
+                        <Clock size={12} />
+                        <span className="text-[10px] font-medium tracking-tight">
+                            {station.lastUpdated || 'LIVE'}
                         </span>
                     </div>
-
-                    <div className="flex items-center gap-1">
-                        <Activity className="w-3 h-3 text-textMuted" />
-                        <span className="text-xs text-textMuted">
-                            {station.lastUpdated || 'Live'}
-                        </span>
-                    </div>
                 </div>
 
-                {/* Status Badge */}
-                <div className={`mt-4 px-3 py-1.5 rounded-full text-xs font-bold text-center uppercase tracking-wider ${station.status === 'critical' ? 'bg-danger/10 text-danger' :
-                    station.status === 'warning' ? 'bg-warning/10 text-warning' :
-                        'bg-success/10 text-success'
-                    }`}>
-                    {station.status}
-                </div>
+                {/* Spotlight Cursor Effect - Refined */}
+                {isHovered && (
+                    <div
+                        className="absolute inset-0 pointer-events-none z-10 transition-opacity opacity-40"
+                        style={{
+                            background: `radial-gradient(120px circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(2, 117, 152, 0.08), transparent 80%)`
+                        }}
+                    />
+                )}
             </div>
         </motion.div>
     );

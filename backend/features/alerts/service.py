@@ -28,3 +28,21 @@ def create_alert(station_id: str, location_name: str, water_level: float):
     db.collection(COLLECTION_NAME).document(alert_id).set(alert_data)
     print(f"⚠️ ALERT TRIGGERED: {location_name}")
     return alert_data
+
+def get_alerts(limit: int = 50):
+    """
+    Fetches the latest alerts from Firestore.
+    """
+    db = get_db()
+    alerts_ref = db.collection(COLLECTION_NAME).order_by("timestamp", direction="DESCENDING").limit(limit)
+    docs = alerts_ref.stream()
+    
+    alerts = []
+    for doc in docs:
+        alert = doc.to_dict()
+        # Convert datetime to string for JSON serialization if it's a datetime object
+        if "timestamp" in alert and hasattr(alert["timestamp"], "isoformat"):
+            alert["timestamp"] = alert["timestamp"].isoformat()
+        alerts.append(alert)
+    
+    return alerts

@@ -112,6 +112,18 @@ export interface ClassificationResult {
     policy_recommendation: string;
 }
 
+// Alert Types
+export interface AlertRecord {
+    alert_id: string;
+    station_id: string;
+    location: string;
+    water_level: number;
+    message: string;
+    timestamp: string;
+    type: string;
+    is_read: boolean;
+}
+
 // Research/Forecasting Types
 export interface ScenarioInput {
     station_id: string;
@@ -338,6 +350,21 @@ export const exportCustomReport = async (type: 'csv' | 'pdf', params: CustomRepo
     }
 
     return response.blob();
+};
+
+/**
+ * ALERTS MODULE
+ * Handles system-wide alerts and notifications
+ */
+
+export const getAlerts = async (limit: number = 50): Promise<AlertRecord[]> => {
+    const response = await fetch(`${API_BASE_URL}/alerts?limit=${limit}`);
+
+    if (!response.ok) {
+        throw new Error(`Failed to fetch alerts: ${response.statusText}`);
+    }
+
+    return response.json();
 };
 
 // ============================================================================
