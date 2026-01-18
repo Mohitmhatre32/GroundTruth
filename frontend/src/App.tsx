@@ -13,6 +13,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Landing from './pages/Landing';
 import Reports from './pages/Reports';
 import RealTimeCenter from './pages/RealTimeCenter';
+import Alerts from './pages/Alerts';
 
 
 function App() {
@@ -30,6 +31,7 @@ function App() {
                             <Route path="/reports" element={<Reports />} />
                             <Route path="/analytics" element={<Analytics />} />
                             <Route path="/policy" element={<Policy />} /> {/* Add Policy route */}
+                            <Route path="/alerts" element={<Alerts />} />
                             <Route path="/simulation" element={<Simulation />} />
                         </Route>
                     </Route>
