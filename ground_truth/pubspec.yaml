@@ -65,6 +65,7 @@ dependencies:
   flutter_secure_storage: ^10.0.0
   googleai_dart: ^3.0.0
   device_info_plus: ^12.3.0
+  audioplayers: ^6.1.0
 
 dev_dependencies:
   flutter_test:
@@ -78,4 +79,5 @@ flutter:
   assets:
     - assets/images/
     - assets/animations/
+    - assets/sounds/
     - .env

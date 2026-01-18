@@ -167,31 +167,6 @@ class ApiService {
     String? area,
     int limit = 20,
   }) async {
-    // Mocking Alerts for Demo
-    await Future.delayed(const Duration(seconds: 1));
-    return {
-      'results': [
-        {
-          'id': '1',
-          'title': 'Critical Water Level',
-          'message': 'Water level in Ludhiana zone has dropped below 30m.',
-          'severity': 'CRITICAL',
-          'timestamp': DateTime.now().toIso8601String(),
-          'is_read': false,
-        },
-        {
-          'id': '2',
-          'title': 'Rainfall Forecast',
-          'message': 'Heavy rainfall expected in next 48 hours. Opportunity for harvesting.',
-          'severity': 'MEDIUM',
-          'timestamp': DateTime.now().subtract(const Duration(hours: 5)).toIso8601String(),
-          'is_read': true,
-        },
-      ]
-    };
-
-    /* 
-    // Real API Call
     try {
       final response = await _dio.get(
         '/notify/alerts/',
@@ -201,11 +176,25 @@ class ApiService {
           'limit': limit,
         },
       );
-      return response.data as Map<String, dynamic>;
+      
+      // The backend returns a list directly, wrap it in 'alerts' key
+      final data = response.data;
+      if (data is List) {
+        return {'alerts': data};
+      } else if (data is Map<String, dynamic>) {
+        // If it's already a map, ensure it has 'alerts' or 'results' key
+        if (data.containsKey('alerts') || data.containsKey('results')) {
+          return data;
+        }
+        // If neither, assume the map itself is the alert list container
+        return data;
+      }
+      return {'alerts': []};
     } on DioException catch (e) {
-      throw _handleError(e);
+      print('Error fetching alerts: ${_handleError(e)}');
+      // Return empty on error
+      return {'alerts': []};
     }
-    */
   }
 
   // Analysis Endpoints

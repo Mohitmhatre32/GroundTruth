@@ -13,7 +13,6 @@ import 'providers/station_provider.dart';
 import 'utils/theme.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/home/home_screen.dart';
-import 'screens/analysis/analysis_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,6 +45,9 @@ void main() async {
 class GroundTruthApp extends StatelessWidget {
   const GroundTruthApp({super.key});
 
+  static final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = 
+      GlobalKey<ScaffoldMessengerState>();
+
   @override
   Widget build(BuildContext context) {
     final apiService = ApiService();
@@ -66,9 +68,15 @@ class GroundTruthApp extends StatelessWidget {
           create: (_) => AuthProvider(apiService: apiService),
         ),
         ChangeNotifierProvider(
-          create: (context) => AlertProvider(
-            pollingService: context.read<AlertPollingService>(),
-          ),
+          create: (context) {
+            final provider = AlertProvider(
+              pollingService: context.read<AlertPollingService>(),
+            );
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              provider.setScaffoldKey(scaffoldMessengerKey);
+            });
+            return provider;
+          },
         ),
         ChangeNotifierProvider(
           create: (context) => LocationProvider(
@@ -82,6 +90,7 @@ class GroundTruthApp extends StatelessWidget {
       child: Builder(
         builder: (context) {
           return MaterialApp(
+            scaffoldMessengerKey: scaffoldMessengerKey,
             title: 'GroundTruth',
             theme: AppTheme.lightTheme,
             debugShowCheckedModeBanner: false,
@@ -90,7 +99,6 @@ class GroundTruthApp extends StatelessWidget {
               '/home': (_) => const HomeScreen(),
               '/login': (_) => const LoginScreen(),
               '/settings': (_) => const SettingsScreen(),
-              '/analysis': (_) => const AnalysisScreen(),
               '/signup': (_) => const SignupScreen(),
             },
           );

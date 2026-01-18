@@ -24,7 +24,7 @@ class AuthProvider extends ChangeNotifier {
   bool get isLoggedIn => _isLoggedIn;
 
   Future<void> _checkLoginStatus() async {
-    _isLoggedIn = await apiService.isLoggedIn();
+    // _isLoggedIn = await apiService.isLoggedIn();
     notifyListeners();
   }
 

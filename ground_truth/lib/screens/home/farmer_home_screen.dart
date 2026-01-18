@@ -1,12 +1,12 @@
-// ignore_for_file: unused_import, use_super_parameters
-
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:badges/badges.dart' as badges;
 import '../../services/api_service.dart';
 import '../../utils/app_colors.dart';
 import '../../widgets/liquid_wave_card.dart';
+import '../../providers/alert_provider.dart';
 import 'alerts_inbox_screen.dart';
 
 class FarmerHomeScreen extends StatefulWidget {
@@ -126,9 +126,34 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> with SingleTickerPr
                                   borderRadius: BorderRadius.circular(12),
                                   boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
                                 ),
-                                child: IconButton(
-                                  icon: Icon(Icons.notifications_none, color: AppColors.primaryBlue),
-                                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AlertsInboxScreen())),
+                                child: Consumer<AlertProvider>(
+                                  builder: (context, alertProvider, child) {
+                                    final unreadCount = alertProvider.unreadAlertCount;
+                                    
+                                    return badges.Badge(
+                                      position: badges.BadgePosition.topEnd(top: -4, end: -4),
+                                      showBadge: unreadCount > 0,
+                                      badgeContent: Text(
+                                        unreadCount > 99 ? '99+' : unreadCount.toString(),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      badgeStyle: badges.BadgeStyle(
+                                        badgeColor: AppColors.criticalRed,
+                                        padding: EdgeInsets.all(unreadCount > 9 ? 4 : 6),
+                                      ),
+                                      child: IconButton(
+                                        icon: Icon(Icons.notifications_none, color: AppColors.primaryBlue),
+                                        onPressed: () => Navigator.push(
+                                          context,
+                                          MaterialPageRoute(builder: (_) => const AlertsInboxScreen()),
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 ),
                               )
                             ],
