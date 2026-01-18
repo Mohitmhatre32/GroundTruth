@@ -16,17 +16,11 @@ from features.risk.router import router as risk_router
 from features.policy.router import router as policy_router
 from features.research.router import router as research_router
 from features.reporting.router import router as reporting_router
-<<<<<<< HEAD
-<<<<<<< HEAD
 from features.weather.router import router as weather_router
 from features.economics.router import router as economics_router
 from features.leaderboard.router import router as leaderboard_router
 from features.satellite.router import router as satellite_router
-=======
->>>>>>> ea89f63615857661e3e2652294b07bb5988726bb
-=======
 from features.alerts.router import router as alerts_router
->>>>>>> 375960042a02e818fafb82cee7c45e9964121725
 
 BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR / ".env")
