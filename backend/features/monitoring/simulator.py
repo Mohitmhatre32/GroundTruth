@@ -52,8 +52,13 @@ def main():
             except requests.exceptions.ConnectionError:
                 print("❌ Connection Error: Is the Uvicorn server running?")
 
+<<<<<<< HEAD
         print("------------------------------------------------")
         time.sleep(45)  # Wait before next batch
+=======
+        print("-" * 30)
+        time.sleep(40) # Updates every 10 seconds
+>>>>>>> ea89f63615857661e3e2652294b07bb5988726bb
 
 if __name__ == "__main__":
     main()

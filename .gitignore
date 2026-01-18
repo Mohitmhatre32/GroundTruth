@@ -14,7 +14,7 @@ build/
 *.swo
 *~
 .DS_Store
-
+static/
 # Environment
 .env
 .env.local

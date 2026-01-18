@@ -16,10 +16,13 @@ from features.risk.router import router as risk_router
 from features.policy.router import router as policy_router
 from features.research.router import router as research_router
 from features.reporting.router import router as reporting_router
+<<<<<<< HEAD
 from features.weather.router import router as weather_router
 from features.economics.router import router as economics_router
 from features.leaderboard.router import router as leaderboard_router
 from features.satellite.router import router as satellite_router
+=======
+>>>>>>> ea89f63615857661e3e2652294b07bb5988726bb
 
 BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR / ".env")
@@ -41,7 +44,11 @@ app.add_middleware(
 @app.on_event("startup")
 async def startup_event():
     init_firebase()
+<<<<<<< HEAD
     print("🚀 Web API Server is Ready.")
+=======
+    print(":rocket: Web API Server is Ready.")
+>>>>>>> ea89f63615857661e3e2652294b07bb5988726bb
 
 # Register All Routers
 app.include_router(monitoring_router, prefix="/api", tags=["Monitoring"])
@@ -51,10 +58,13 @@ app.include_router(risk_router, prefix="/api", tags=["Risk"])
 app.include_router(policy_router, prefix="/api", tags=["Policy"])
 app.include_router(research_router, prefix="/api", tags=["Research"])
 app.include_router(reporting_router, prefix="/api", tags=["Reporting"])
+<<<<<<< HEAD
 app.include_router(weather_router, prefix="/api/weather", tags=["Weather"])
 app.include_router(economics_router, prefix="/api/economics", tags=["Economics"])
 app.include_router(leaderboard_router, prefix="/api/leaderboard", tags=["Leaderboard"])
 app.include_router(satellite_router, prefix="/api/satellite", tags=["Satellite"])
+=======
+>>>>>>> ea89f63615857661e3e2652294b07bb5988726bb
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
