@@ -195,7 +195,7 @@ interface StatCardProps {
 }
 
 const StatCard = ({ title, value, icon, subValue, subColor, highlight, color }: StatCardProps) => (
-    <div className={`p-4 rounded-xl border border-slate-200/60 bg-white shadow-sm flex flex-col justify-between h-24 group transition-all hover:shadow-md ${highlight === 'danger' ? 'border-l-4 border-l-danger' : ''}`}>
+    <div className={`p-4 rounded-xl border border-slate-200/60 bg-white shadow-sm flex flex-col justify-between min-h-[6rem] h-auto group transition-all hover:shadow-md ${highlight === 'danger' ? 'border-l-4 border-l-danger' : ''}`}>
         <div className={`flex items-center justify-between ${color || 'text-primary'}`}>
             <div className="p-1.5 rounded-lg glass-dark group-hover:bg-primary/10 transition-colors">
                 {icon}

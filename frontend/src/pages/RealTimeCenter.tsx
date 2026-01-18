@@ -111,6 +111,27 @@ const RealTimeCenter = () => {
     );
 };
 
+// --- Water Wave Animation Component ---
+const WaterWave = ({ status }: { status: 'safe' | 'warning' | 'critical' }) => {
+    // Determine height based on status
+    const height = status === 'safe' ? '85%' : status === 'warning' ? '60%' : '30%';
+    const color = status === 'safe' ? 'fill-blue-400' : status === 'warning' ? 'fill-yellow-400' : 'fill-red-400';
+    const bgColor = status === 'safe' ? 'bg-blue-400' : status === 'warning' ? 'bg-yellow-400' : 'bg-red-400';
+
+    return (
+        <div className="absolute inset-x-0 bottom-0 z-0 transition-all duration-[2000ms] ease-in-out transform translate-y-full group-hover:translate-y-0" style={{ height }}>
+            {/* Wave SVG */}
+            <div className="absolute top-0 left-0 w-[200%] -translate-y-[99%] animate-wave">
+                <svg className={`w-full h-12 ${color} opacity-30`} viewBox="0 0 1200 120" preserveAspectRatio="none">
+                    <path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z" />
+                </svg>
+            </div>
+            {/* Main Fill */}
+            <div className={`w-full h-full ${bgColor} opacity-10`} />
+        </div>
+    );
+};
+
 // Enhanced Station Card Component
 const StationCard = ({
     station,
@@ -138,7 +159,7 @@ const StationCard = ({
 
     const statusConfig = {
         safe: {
-            accent: 'border-l-success',
+            accent: 'border-l-success', // Removing from usage but keeping config struct for now if needed elsewhere
             icon: 'text-success',
             dot: 'bg-success',
             progress: 'bg-success'
@@ -174,15 +195,18 @@ const StationCard = ({
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             onClick={onClick}
-            className={`group cursor-pointer rounded-2xl transition-all duration-300 ${isSelected ? 'ring-2 ring-primary ring-offset-4' : ''}`}
+            className={`group cursor-pointer rounded-2xl transition-all duration-300 ${isSelected ? 'ring-2 ring-primary ring-offset-4 scale-[1.02]' : 'hover:-translate-y-1 hover:shadow-xl shadow-md border border-slate-200'} overflow-hidden bg-white`}
         >
-            <div className={`relative surface-card border-l-4 ${config.accent} p-5 flex flex-col h-full overflow-hidden`}>
+            <div className={`relative p-5 flex flex-col h-full overflow-hidden bg-white/80 backdrop-blur-sm`}>
 
-                {/* Subtle Industrial Background Hint - Reduced "Whitishness" */}
-                <div className="absolute inset-0 bg-slate-50/30 -z-10 group-hover:bg-slate-50/50 transition-colors" />
+                {/* --- Water Wave Animation (Background) --- */}
+                <WaterWave status={station.status} />
+
+                {/* Subtle Industrial Background Hint - Reduced "Whitishness" - Above water z-index if needed, currently water is z-0, this is z-10? No this is -z-10. Wait. */}
+                <div className="absolute inset-0 bg-slate-50/30 -z-10 group-hover:bg-slate-50/50 transition-colors pointer-events-none" />
 
                 {/* Header Section */}
-                <div className="flex items-start justify-between mb-4">
+                <div className="flex items-start justify-between mb-4 relative z-10">
                     <div className="flex items-center gap-2">
                         <div className="p-2 rounded-lg glass-dark text-slate-600">
                             <MapPin size={16} />
@@ -208,7 +232,7 @@ const StationCard = ({
                 </div>
 
                 {/* Main Metric */}
-                <div className="flex-1 py-2">
+                <div className="flex-1 py-2 relative z-10">
                     <div className="flex items-baseline gap-1">
                         <span className="text-4xl font-black text-slate-900 tracking-tight leading-none">
                             {station.waterLevel.toFixed(1)}
@@ -234,7 +258,7 @@ const StationCard = ({
                 </div>
 
                 {/* Footer Section */}
-                <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
+                <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between relative z-10">
                     <div className={`flex items-center gap-1.5 px-2 py-1 rounded-md glass-dark ${station.trend === 'up' ? 'text-success' :
                         station.trend === 'down' ? 'text-danger' : 'text-slate-500'
                         }`}>
@@ -253,7 +277,7 @@ const StationCard = ({
                 {/* Spotlight Cursor Effect - Refined */}
                 {isHovered && (
                     <div
-                        className="absolute inset-0 pointer-events-none z-10 transition-opacity opacity-40"
+                        className="absolute inset-0 pointer-events-none z-20 transition-opacity opacity-40"
                         style={{
                             background: `radial-gradient(120px circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(2, 117, 152, 0.08), transparent 80%)`
                         }}

@@ -1,6 +1,6 @@
 
 import React, { useRef, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, ZoomControl } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useNavigate } from 'react-router-dom';
 import L from 'leaflet';
@@ -108,7 +108,9 @@ const StationMap: React.FC<StationMapProps> = ({ stations }) => {
                 zoom={8}
                 style={{ height: '100%', width: '100%' }}
                 scrollWheelZoom={true}
+                zoomControl={false}
             >
+                <ZoomControl position="topright" />
                 <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
                     url="https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png"

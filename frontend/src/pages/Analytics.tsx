@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
-import { ArrowLeft, Download, Droplet, TrendingUp, Activity, BarChart3, Brain, MapPin } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ArrowLeft, Download, Droplet, TrendingUp, Activity, BarChart3, Brain, MapPin, ChevronDown, Check, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { getHistory, getZones, simulateScenario, HistoryRecord, Station, ScenarioResult } from '../services/api';
 
@@ -18,6 +19,10 @@ const Analytics = () => {
     const [historicalData, setHistoricalData] = useState<ChartDataPoint[]>([]);
     const [forecastData, setForecastData] = useState<ScenarioResult | null>(null);
     const [loading, setLoading] = useState(true);
+
+    // Dropdown state
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
 
     // Scenario controls
     const [rainfallChange, setRainfallChange] = useState<number>(0);
@@ -73,20 +78,6 @@ const Analytics = () => {
 
         fetchHistoricalData();
     }, []);
-
-    const handleStationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const stationId = e.target.value;
-        setSelectedStationId(stationId);
-
-        const station = stations.find(s => s.id === stationId);
-        if (station) {
-            setSelectedStationName(station.name);
-        }
-
-        // Reset forecast when changing station
-        setShowForecast(false);
-        setForecastData(null);
-    };
 
     const runForecast = async () => {
         if (!selectedStationId) {
@@ -193,6 +184,12 @@ const Analytics = () => {
     const arimaTrend = getArimaTrend();
     const lstmTrend = getLstmTrend();
 
+    // Filter stations based on search
+    const filteredStations = stations.filter(station =>
+        station.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        station.id.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
     return (
         <div className="space-y-6 pb-10">
             {/* Header */}
@@ -223,26 +220,91 @@ const Analytics = () => {
             </div>
 
             {/* Station Selector */}
-            <div className="bg-gradient-to-r from-primary/10 to-blue-50 rounded-xl border-2 border-primary/30 p-6">
+            <div className="bg-gradient-to-r from-primary/10 to-blue-50 rounded-xl border-2 border-primary/30 p-6 relative z-30">
                 <div className="flex items-center gap-4">
                     <div className="p-3 bg-primary rounded-lg">
                         <MapPin className="text-white" size={24} />
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 relative">
                         <label className="block text-sm font-semibold text-textMain mb-2">
                             Select Monitoring Station ({stations.length} available)
                         </label>
-                        <select
-                            value={selectedStationId}
-                            onChange={handleStationChange}
-                            className="w-full px-4 py-3 border-2 border-primary/30 rounded-lg bg-white focus:ring-2 focus:ring-primary/50 outline-none font-medium text-lg"
-                        >
-                            {stations.map(station => (
-                                <option key={station.id} value={station.id}>
-                                    {station.name} ({station.id})
-                                </option>
-                            ))}
-                        </select>
+
+                        {/* Custom Dropdown */}
+                        <div className="relative">
+                            <button
+                                onClick={() => {
+                                    setIsDropdownOpen(!isDropdownOpen);
+                                    if (!isDropdownOpen) setSearchQuery(""); // Clear search on open
+                                }}
+                                className="w-full px-4 py-3 bg-white border-2 border-primary/30 rounded-lg flex items-center justify-between hover:border-primary/50 transition-colors group"
+                            >
+                                <span className="font-medium text-lg text-slate-800">
+                                    {selectedStationName || 'Select a station...'}
+                                </span>
+                                <div className={`transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`}>
+                                    <ChevronDown className="text-primary" size={20} />
+                                </div>
+                            </button>
+
+                            <AnimatePresence>
+                                {isDropdownOpen && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -10, scale: 0.98 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: -10, scale: 0.98 }}
+                                        transition={{ duration: 0.2, ease: "easeOut" }}
+                                        className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl border border-primary/20 shadow-xl max-h-[350px] overflow-hidden z-50 flex flex-col"
+                                    >
+                                        {/* Search Input */}
+                                        <div className="p-3 border-b border-primary/10 bg-slate-50 sticky top-0 z-10">
+                                            <div className="relative">
+                                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                                                <input
+                                                    autoFocus
+                                                    type="text"
+                                                    placeholder="Search stations..."
+                                                    value={searchQuery}
+                                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                                    className="w-full pl-9 pr-3 py-2 text-sm border border-primary/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-slate-700 bg-white"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="overflow-y-auto custom-scrollbar p-2">
+                                            {filteredStations.length === 0 ? (
+                                                <div className="px-4 py-3 text-slate-500 text-center text-sm">
+                                                    No stations found
+                                                </div>
+                                            ) : (
+                                                filteredStations.map(station => (
+                                                    <button
+                                                        key={station.id}
+                                                        onClick={() => {
+                                                            setSelectedStationId(station.id);
+                                                            setSelectedStationName(station.name);
+                                                            setIsDropdownOpen(false);
+                                                            // Reset forecast
+                                                            setShowForecast(false);
+                                                            setForecastData(null);
+                                                        }}
+                                                        className={`w-full px-4 py-3 text-left hover:bg-slate-50 flex items-center justify-between transition-colors rounded-lg mb-1 ${selectedStationId === station.id ? 'bg-primary/5 text-primary font-bold' : 'text-slate-700'
+                                                            }`}
+                                                    >
+                                                        <span>{station.name}</span>
+                                                        {selectedStationId === station.id && (
+                                                            <Check size={16} className="text-primary" />
+                                                        )}
+                                                    </button>
+                                                ))
+                                            )}
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+
                         <p className="text-xs text-textMuted mt-2">
                             Forecast will be generated for: <span className="font-bold text-primary">{selectedStationName}</span>
                         </p>

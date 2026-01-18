@@ -1,6 +1,6 @@
 import { ReactNode, useState } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
-import { LayoutDashboard, LineChart, FlaskConical, AlertTriangle, Bell, Search, User, FileText, Activity, Shield, Menu, X, Droplets } from 'lucide-react';
+import { LayoutDashboard, LineChart, FlaskConical, AlertTriangle, Bell, User, FileText, Activity, Shield, Menu, X, Droplets } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import AnimatedBackground from '../AnimatedBackground';
@@ -29,17 +29,17 @@ const AppLayout = () => {
                         animate={{ justifyContent: sidebarOpen ? 'flex-start' : 'center' }}
                     >
                         <div className="p-1.5 rounded-lg bg-primary/20 text-primary">
-                            <Droplets size={24} strokeWidth={2.5} />
+                            <Droplets size={20} strokeWidth={2.5} />
                         </div>
-                        <motion.h1
+                        <motion.h2
                             className="text-xl font-black text-white tracking-widest uppercase overflow-hidden whitespace-nowrap"
                             animate={{
                                 opacity: sidebarOpen ? 1 : 0,
                                 display: sidebarOpen ? 'block' : 'none'
                             }}
                         >
-                            Subterra
-                        </motion.h1>
+                            GroundTruth
+                        </motion.h2>
                     </motion.div>
                 </div>
 
@@ -176,14 +176,7 @@ const AppLayout = () => {
                     </button>
 
                     <div className="flex items-center gap-4 flex-1 max-w-xl">
-                        <div className="relative w-full max-w-md">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                            <input
-                                type="text"
-                                placeholder="Search Intel..."
-                                className="w-full pl-10 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-slate-300"
-                            />
-                        </div>
+                        <h1 className="text-xl font-bold text-primary tracking-tight">GroundTruth</h1>
                     </div>
 
                     <div className="flex items-center gap-4">
