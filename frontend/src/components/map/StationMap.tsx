@@ -1,8 +1,6 @@
-
 import React, { useRef, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, ZoomControl } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { useNavigate } from 'react-router-dom';
 import L from 'leaflet';
 
 // Use the same type as Dashboard
@@ -37,7 +35,7 @@ interface StationMapProps {
 }
 
 // Custom Marker component with hover popup
-const HoverMarker = ({ station, onClick }: { station: MapStation; onClick: () => void }) => {
+const HoverMarker = ({ station }: { station: MapStation }) => {
     const markerRef = useRef<L.Marker>(null);
 
     useEffect(() => {
@@ -57,9 +55,6 @@ const HoverMarker = ({ station, onClick }: { station: MapStation; onClick: () =>
             ref={markerRef}
             position={[station.lat, station.lng]}
             icon={createCustomIcon(station.status)}
-            eventHandlers={{
-                click: onClick,
-            }}
         >
             <Popup
                 className="custom-hover-popup"
@@ -87,10 +82,6 @@ const HoverMarker = ({ station, onClick }: { station: MapStation; onClick: () =>
                                 {station.waterLevel.toFixed(1)}m
                             </span>
                         </div>
-
-                        <div className="pt-2 border-t border-gray-200">
-                            <p className="text-xs text-textMuted italic">Click for detailed analytics</p>
-                        </div>
                     </div>
                 </div>
             </Popup>
@@ -99,8 +90,6 @@ const HoverMarker = ({ station, onClick }: { station: MapStation; onClick: () =>
 };
 
 const StationMap: React.FC<StationMapProps> = ({ stations }) => {
-    const navigate = useNavigate();
-
     return (
         <div className="h-full w-full rounded-xl overflow-hidden shadow-sm border border-gray-200">
             <MapContainer
@@ -119,7 +108,6 @@ const StationMap: React.FC<StationMapProps> = ({ stations }) => {
                     <HoverMarker
                         key={station.id}
                         station={station}
-                        onClick={() => navigate(`/analytics/${station.id}`)}
                     />
                 ))}
             </MapContainer>

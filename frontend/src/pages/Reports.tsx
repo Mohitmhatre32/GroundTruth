@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { useEffect, useState } from 'react';
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 
-import { FileText, Download, Calendar, TrendingDown, AlertCircle, BarChart2 } from 'lucide-react';
+import { FileText, Download, Calendar, TrendingDown, AlertCircle, BarChart2, Trophy, Star } from 'lucide-react';
 import { toast } from 'sonner';
-import { getHistory, HistoryRecord, getZones, Station, exportOverallReport, exportCustomReport } from '../services/api';
+import { getHistory, getZones, Station, exportOverallReport, exportCustomReport, getRankings, RankingRecord } from '../services/api';
 
 interface ChartData {
     date: string;
@@ -23,6 +23,7 @@ const Reports = () => {
 
     // Custom Report State
     const [stations, setStations] = useState<Station[]>([]);
+    const [rankings, setRankings] = useState<RankingRecord[]>([]);
     const [selectedStation, setSelectedStation] = useState<string>('');
     const [dateRange, setDateRange] = useState({ start: '', end: '' });
     const [downloading, setDownloading] = useState({ overall: false, custom: false });
@@ -30,9 +31,10 @@ const Reports = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [historyData, stationsData] = await Promise.all([
+                const [historyData, stationsData, rankingsData] = await Promise.all([
                     getHistory(),
-                    getZones()
+                    getZones(),
+                    getRankings()
                 ]);
 
                 // Transform history data
@@ -43,6 +45,7 @@ const Reports = () => {
 
                 setHistory(transformedData);
                 setStations(stationsData);
+                setRankings(rankingsData);
 
                 // Calculate statistics
                 if (transformedData.length > 0) {
@@ -377,7 +380,7 @@ const Reports = () => {
                                 onChange={(e) => setSelectedStation(e.target.value)}
                             >
                                 <option value="">-- Choose a Station --</option>
-                                {stations.map(station => (
+                                {stations.map((station: Station) => (
                                     <option key={station.id} value={station.id}>
                                         {station.name} ({station.id})
                                     </option>
@@ -423,6 +426,102 @@ const Reports = () => {
                                 <Download size={18} />
                                 PDF
                             </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Sustainability Leaderboard - STAR GRAPH */}
+            <div className="bg-white rounded-xl shadow-lg border border-primary/10 overflow-hidden">
+                <div className="bg-gradient-to-r from-primary/5 to-transparent p-6 border-b border-primary/10 flex items-center justify-between">
+                    <div>
+                        <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
+                            <Trophy className="text-primary" />
+                            Sustainability Leaderboard
+                        </h2>
+                        <p className="text-sm text-slate-500 font-medium mt-1">
+                            Ranking stations based on replenishment efficiency and water level stability.
+                        </p>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8">
+                    {/* Radar Chart (Star Graph) */}
+                    <div className="h-[400px] relative bg-slate-50/50 rounded-2xl border border-slate-100 p-4">
+                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                            <Star size={12} className="text-primary" />
+                            Performance Distribution
+                        </h3>
+                        <ResponsiveContainer width="100%" height="90%">
+                            <RadarChart cx="50%" cy="50%" outerRadius="80%" data={rankings.slice(0, 10)}>
+                                <PolarGrid stroke="#e2e8f0" />
+                                <PolarAngleAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 10, fontWeight: 700 }} />
+                                <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fontSize: 9 }} />
+                                <Radar
+                                    name="Sustainability Score"
+                                    dataKey="score"
+                                    stroke="#027598"
+                                    fill="#027598"
+                                    fillOpacity={0.6}
+                                />
+                                <Tooltip
+                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                                />
+                            </RadarChart>
+                        </ResponsiveContainer>
+                    </div>
+
+                    {/* Rankings Table */}
+                    <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+                        <div className="max-h-[350px] overflow-y-auto custom-scrollbar">
+                            <table className="w-full text-left">
+                                <thead className="bg-slate-50 sticky top-0 z-10">
+                                    <tr>
+                                        <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Rank</th>
+                                        <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Station</th>
+                                        <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Score</th>
+                                        <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-50">
+                                    {rankings.map((rank: RankingRecord, index: number) => (
+                                        <tr key={rank.name} className="hover:bg-slate-50/50 transition-colors">
+                                            <td className="px-4 py-4">
+                                                <div className={`w-6 h-6 rounded-lg flex items-center justify-center font-black text-xs ${index === 0 ? 'bg-amber-100 text-amber-600' :
+                                                    index === 1 ? 'bg-slate-200 text-slate-600' :
+                                                        index === 2 ? 'bg-orange-100 text-orange-600' :
+                                                            'bg-slate-50 text-slate-400'
+                                                    }`}>
+                                                    {index + 1}
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-4">
+                                                <p className="font-bold text-slate-900 text-sm">{rank.name}</p>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase">{rank.depth.toFixed(1)}m Depth</p>
+                                            </td>
+                                            <td className="px-4 py-4">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-12 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                                        <div
+                                                            className="h-full bg-primary"
+                                                            style={{ width: `${rank.score}%` }}
+                                                        />
+                                                    </div>
+                                                    <span className="font-black text-primary text-xs">{rank.score}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-4">
+                                                <span className={`px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-tighter ${rank.status === 'Healthy' ? 'bg-success/10 text-success' :
+                                                    rank.status === 'Caution' ? 'bg-warning/10 text-warning' :
+                                                        'bg-danger/10 text-danger'
+                                                    }`}>
+                                                    {rank.status}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>

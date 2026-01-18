@@ -1,6 +1,6 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
-import { LayoutDashboard, LineChart, FlaskConical, AlertTriangle, Bell, User, FileText, Activity, Shield, Menu, X, Droplets } from 'lucide-react';
+import { LayoutDashboard, LineChart, FlaskConical, AlertTriangle, User, FileText, Activity, Shield, Menu, X, Droplets, Leaf } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import AnimatedBackground from '../AnimatedBackground';
@@ -9,6 +9,22 @@ const AppLayout = () => {
     const { logout, user } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+    const [hasCriticalAlert, setHasCriticalAlert] = useState(false);
+
+    useEffect(() => {
+        const checkAlerts = async () => {
+            try {
+                const alerts = await import('../../services/api').then(m => m.getAlerts());
+                const critical = alerts.some(a => a.type.toLowerCase() === 'critical');
+                setHasCriticalAlert(critical);
+            } catch (error) {
+                console.error('Failed to fetch alerts in layout:', error);
+            }
+        };
+        checkAlerts();
+        const interval = setInterval(checkAlerts, 30000);
+        return () => clearInterval(interval);
+    }, []);
 
     return (
         <div className="flex h-screen bg-transparent font-sans text-textMain overflow-hidden relative">
@@ -47,6 +63,7 @@ const AppLayout = () => {
                 <nav className="flex-1 p-4 space-y-2 overflow-y-auto overflow-x-hidden pt-8">
                     <NavItem to="/dashboard" icon={<LayoutDashboard size={18} />} label="Command Center" isOpen={sidebarOpen} />
                     <NavItem to="/real-time" icon={<Activity size={18} />} label="Live Station Feed" isOpen={sidebarOpen} />
+                    <NavItem to="/vegetation" icon={<Leaf size={18} />} label="Vegetation Analysis" isOpen={sidebarOpen} />
                     <NavItem to="/simulation" icon={<FlaskConical size={18} />} label="Simulation Lab" isOpen={sidebarOpen} />
 
                     {sidebarOpen && (
@@ -65,7 +82,13 @@ const AppLayout = () => {
                     )}
 
                     <NavItem to="/reports" icon={<FileText size={18} />} label="Archived Reports" isOpen={sidebarOpen} />
-                    <NavItem to="/alerts" icon={<AlertTriangle size={18} />} label="System Alerts" isOpen={sidebarOpen} />
+                    <NavItem
+                        to="/alerts"
+                        icon={<AlertTriangle size={18} />}
+                        label="System Alerts"
+                        isOpen={sidebarOpen}
+                        isBlinking={hasCriticalAlert}
+                    />
                 </nav>
 
                 {/* User Section - Dark Mode Footer */}
@@ -122,7 +145,8 @@ const AppLayout = () => {
 
                             <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
                                 <NavItem to="/dashboard" icon={<LayoutDashboard size={20} />} label="Command Center" isOpen={true} onClick={() => setMobileSidebarOpen(false)} />
-                                <NavItem to="/real-time" icon={<Activity size={20} />} label="Real Time Center" isOpen={true} onClick={() => setMobileSidebarOpen(false)} />
+                                <NavItem to="/real-time" icon={<Activity size={20} />} label="Live Station Feed" isOpen={true} onClick={() => setMobileSidebarOpen(false)} />
+                                <NavItem to="/vegetation" icon={<Leaf size={20} />} label="Vegetation Analysis" isOpen={true} onClick={() => setMobileSidebarOpen(false)} />
                                 <NavItem to="/simulation" icon={<FlaskConical size={20} />} label="Simulation Lab" isOpen={true} onClick={() => setMobileSidebarOpen(false)} />
 
                                 <div className="pt-4 pb-2">
@@ -137,7 +161,14 @@ const AppLayout = () => {
                                 </div>
 
                                 <NavItem to="/reports" icon={<FileText size={20} />} label="Reports" isOpen={true} onClick={() => setMobileSidebarOpen(false)} />
-                                <NavItem to="/alerts" icon={<AlertTriangle size={20} />} label="Alerts" isOpen={true} onClick={() => setMobileSidebarOpen(false)} />
+                                <NavItem
+                                    to="/alerts"
+                                    icon={<AlertTriangle size={20} />}
+                                    label="Alerts"
+                                    isOpen={true}
+                                    onClick={() => setMobileSidebarOpen(false)}
+                                    isBlinking={hasCriticalAlert}
+                                />
                             </nav>
 
                             <div className="p-4 border-t border-gray-100/50 space-y-3">
@@ -180,10 +211,7 @@ const AppLayout = () => {
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <button className="relative p-2 rounded-xl hover:bg-slate-50 text-slate-400 hover:text-primary transition-all">
-                            <Bell size={18} />
-                            <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-danger rounded-full ring-2 ring-white"></span>
-                        </button>
+                        {/* Bell icon removed */}
                     </div>
                 </header>
 
@@ -196,7 +224,7 @@ const AppLayout = () => {
     );
 };
 
-const NavItem = ({ to, icon, label, isOpen, onClick }: { to: string, icon: ReactNode, label: string, isOpen: boolean, onClick?: () => void }) => {
+const NavItem = ({ to, icon, label, isOpen, onClick, isBlinking }: { to: string, icon: ReactNode, label: string, isOpen: boolean, onClick?: () => void, isBlinking?: boolean }) => {
     return (
         <NavLink
             to={to}
@@ -204,11 +232,13 @@ const NavItem = ({ to, icon, label, isOpen, onClick }: { to: string, icon: React
             className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-200 group ${isActive
                     ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                    : 'text-slate-500 hover:text-white hover:bg-white/5'
+                    : isBlinking
+                        ? 'bg-danger/20 text-danger animate-pulse shadow-lg shadow-danger/20'
+                        : 'text-slate-500 hover:text-white hover:bg-white/5'
                 }`
             }
         >
-            <span className="shrink-0 transition-transform group-hover:scale-110">{icon}</span>
+            <span className={`shrink-0 transition-transform group-hover:scale-110 ${isBlinking ? 'animate-bounce' : ''}`}>{icon}</span>
             <motion.span
                 animate={{
                     opacity: isOpen ? 1 : 0,

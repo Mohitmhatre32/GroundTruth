@@ -144,9 +144,45 @@ export interface ExportDataResponse {
     error?: string;
 }
 
+// Leaderboard Types
+export interface RankingRecord {
+    name: string;
+    score: number;
+    depth: number;
+    status: string;
+}
+
+// Satellite/NDVI Types
+export interface GeoJSONFeature {
+    type: "Feature";
+    properties: {
+        station_id: string;
+        ndvi_score: number;
+        fill: string;
+    };
+    geometry: {
+        type: "Point";
+        coordinates: [number, number];
+    };
+}
+
+export interface GeoJSONCollection {
+    type: "FeatureCollection";
+    features: GeoJSONFeature[];
+}
+
+// Economics Types
+export interface EconomicImpact {
+    water_saved_mcm: number;
+    financial_savings_raw: number;
+    financial_savings_text: string;
+    note: string;
+}
+
 // ============================================================================
 // API FUNCTIONS
 // ============================================================================
+
 
 /**
  * MONITORING MODULE
@@ -362,6 +398,51 @@ export const getAlerts = async (limit: number = 50): Promise<AlertRecord[]> => {
 
     if (!response.ok) {
         throw new Error(`Failed to fetch alerts: ${response.statusText}`);
+    }
+
+    return response.json();
+};
+
+/**
+ * LEADERBOARD MODULE
+ * Ranks stations by sustainability score
+ */
+
+export const getRankings = async (): Promise<RankingRecord[]> => {
+    const response = await fetch(`${API_BASE_URL}/leaderboard/rankings`);
+
+    if (!response.ok) {
+        throw new Error(`Failed to fetch rankings: ${response.statusText}`);
+    }
+
+    return response.json();
+};
+
+/**
+ * SATELLITE MODULE
+ * Fetches NDVI vegetation indices for agricultural monitoring
+ */
+
+export const getSatelliteData = async (): Promise<GeoJSONCollection> => {
+    const response = await fetch(`${API_BASE_URL}/satellite/ndvi-layer`);
+
+    if (!response.ok) {
+        throw new Error(`Failed to fetch satellite data: ${response.statusText}`);
+    }
+
+    return response.json();
+};
+
+/**
+ * ECONOMICS MODULE
+ * Translates hydro-metrics into financial savings
+ */
+
+export const getEconomicImpact = async (mcmSaved: number): Promise<EconomicImpact> => {
+    const response = await fetch(`${API_BASE_URL}/economics/calculate/${mcmSaved}`);
+
+    if (!response.ok) {
+        throw new Error(`Failed to fetch economic impact: ${response.statusText}`);
     }
 
     return response.json();
