@@ -365,15 +365,15 @@ const Simulation = () => {
                                     </div>
                                 </div>
 
-                                {/* Economic Impact Footer */}
+                                {/* Economic Impact Footer - LIGHT THEME */}
                                 {economicImpact && (
                                     <motion.div
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        className="mt-auto p-5 rounded-2xl bg-slate-900 text-white relative overflow-hidden"
+                                        className="mt-auto p-5 rounded-2xl bg-white border border-slate-200 shadow-sm text-slate-900 relative overflow-hidden"
                                     >
-                                        <div className="absolute right-0 top-0 p-4 opacity-10">
-                                            <IndianRupee size={80} />
+                                        <div className="absolute right-0 top-0 p-4 opacity-[0.03]">
+                                            <IndianRupee size={80} className="text-slate-900" />
                                         </div>
                                         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
                                             <div>
@@ -381,13 +381,13 @@ const Simulation = () => {
                                                 <p className="text-lg font-bold">
                                                     Financial {economicImpact.financial_savings_raw >= 0 ? 'Surplus/Savings' : 'Loss Factor'}
                                                 </p>
-                                                <p className="text-xs text-slate-400 mt-1 max-w-md">{economicImpact.note}</p>
+                                                <p className="text-xs text-slate-500 mt-1 max-w-md italic">{economicImpact.note}</p>
                                             </div>
                                             <div className="text-right">
                                                 <p className={`text-4xl font-black ${economicImpact.financial_savings_raw >= 0 ? 'text-success' : 'text-danger'}`}>
                                                     {economicImpact.financial_savings_text}
                                                 </p>
-                                                <p className="text-[10px] font-black text-slate-500 uppercase">Estimated Impact Value</p>
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Estimated Impact Value</p>
                                             </div>
                                         </div>
                                     </motion.div>
