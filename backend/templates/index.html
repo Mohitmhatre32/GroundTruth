@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <title>GroundTruth | Decision Support System</title>
     
     <!-- External Libraries -->
@@ -263,6 +264,40 @@
     <div style="height: 100px;"></div>
 </div>
 
+<!-- FEATURE 11: 3D SUBSURFACE DIGITAL TWIN -->
+    <h2>11. 3D Subsurface Digital Twin</h2>
+    <div class="section-desc">
+        <b>X-Ray Vision:</b> A real-time 3D visualization of the groundwater table relative to soil layers. 
+        Shows the physical "Cone of Depression" caused by pumping.
+    </div>
+    
+    <div class="split-view">
+        <div class="card col-left">
+            <h3>🎛️ 3D Controls</h3>
+            <div class="input-group">
+                <label>Visualized Station</label>
+                <select id="threeDStationSelect" onchange="update3DView()">
+                    <option value="" disabled selected>Select a Zone...</option>
+                </select>
+            </div>
+            <div style="background:#f4f6f8; padding:15px; border-radius:8px; font-size:13px;">
+                <p><b>🟫 Brown:</b> Topsoil & Clay (Dry)</p>
+                <p><b>🟦 Blue Plane:</b> Current Water Table</p>
+                <p><b>🪨 Grey:</b> Bedrock (Aquifer Bottom)</p>
+                <hr>
+                <div id="threeDStats" style="font-weight:bold; color:#1A3C5E;">Current Depth: -- m</div>
+            </div>
+        </div>
+        <div class="chart-box col-right" style="background: #111; position: relative;">
+            <div id="threeDContainer" style="height: 400px; width: 100%;"></div>
+            <div style="position:absolute; top:10px; right:10px; color:white; font-size:12px; background:rgba(0,0,0,0.5); padding:5px;">
+                🖱️ Click & Drag to Rotate
+            </div>
+        </div>
+    </div>
+    
+    <div style="height: 100px;"></div>
+
 <!-- FIREBASE LOGIC -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
@@ -461,6 +496,121 @@
     }
 
     initMap(); loadZones(); loadTrend(); initSatelliteMap(); loadLeaderboard();
+
+
+    // --- 3D AQUIFER LOGIC (THREE.JS) ---
+    let scene, camera, renderer, waterMesh, wellPipe;
+    
+    function init3D() {
+        const container = document.getElementById('threeDContainer');
+        
+        // 1. Scene Setup
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x111111); // Dark background
+        
+        // 2. Camera
+        camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
+        camera.position.set(20, 15, 30); // Isometric-ish view
+        camera.lookAt(0, -5, 0);
+
+        // 3. Renderer
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        container.appendChild(renderer.domElement);
+
+        // 4. Lights
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(10, 20, 10);
+        scene.add(dirLight);
+
+        // 5. Build the "Earth Block" (Wireframe Container)
+        const geometry = new THREE.BoxGeometry(10, 20, 10);
+        const edges = new THREE.EdgesGeometry(geometry);
+        const line = new THREE.LineSegments(edges, new THREE.LineBasicColor(0x555555));
+        scene.add(line);
+
+        // 6. Soil Layers (Visual Decor)
+        // Topsoil (Brown)
+        const topSoilGeo = new THREE.BoxGeometry(10, 2, 10);
+        const topSoilMat = new THREE.MeshLambertMaterial({ color: 0x8B4513, transparent: true, opacity: 0.8 });
+        const topSoil = new THREE.Mesh(topSoilGeo, topSoilMat);
+        topSoil.position.y = 9; // Top of the box
+        scene.add(topSoil);
+
+        // 7. The Well Pipe (Cylinder)
+        const pipeGeo = new THREE.CylinderGeometry(0.2, 0.2, 20, 32);
+        const pipeMat = new THREE.MeshPhongMaterial({ color: 0x888888 });
+        wellPipe = new THREE.Mesh(pipeGeo, pipeMat);
+        scene.add(wellPipe);
+
+        // 8. THE WATER TABLE (Dynamic Blue Plane)
+        const waterGeo = new THREE.BoxGeometry(9.8, 0.5, 9.8); // Slightly smaller than container
+        const waterMat = new THREE.MeshPhongMaterial({ color: 0x00BFFF, transparent: true, opacity: 0.7 });
+        waterMesh = new THREE.Mesh(waterGeo, waterMat);
+        waterMesh.position.y = 0; // Start at middle
+        scene.add(waterMesh);
+
+        // Animation Loop
+        function animate() {
+            requestAnimationFrame(animate);
+            // Rotate slightly for effect
+            scene.rotation.y += 0.001; 
+            renderer.render(scene, camera);
+        }
+        animate();
+    }
+
+    // Populate the 3D Selector
+    async function load3DZones() {
+        const res = await fetch("/api/zones");
+        const zones = await res.json();
+        const sel = document.getElementById('threeDStationSelect');
+        zones.forEach(z => {
+            sel.innerHTML += `<option value="${z.id}" data-depth="${z.base_level_mbgl}">${z.name}</option>`;
+        });
+        
+        // Auto-select first and render
+        if (zones.length > 0) {
+            sel.selectedIndex = 1;
+            update3DView();
+        }
+    }
+
+    // Update Water Level based on Selection
+    async function update3DView() {
+        const sel = document.getElementById('threeDStationSelect');
+        const stationId = sel.value;
+        const selectedOption = sel.options[sel.selectedIndex];
+        
+        // Get simulated Live Data (or static base level)
+        // Ideally we fetch from /api/mobile/stations for live, but here we simulate for the visual
+        const baseDepth = parseFloat(selectedOption.getAttribute('data-depth'));
+        
+        document.getElementById('threeDStats').innerText = `Visualizing Depth: ${baseDepth}m`;
+
+        // MAP DEPTH TO 3D COORDINATES
+        // Box is 20 units high. Y=10 is Surface (0m). Y=-10 is Deep (100m).
+        // Formula: 10 - (Depth / 5)
+        // Example: Depth 0m -> Y=10. Depth 50m -> Y=0. Depth 100m -> Y=-10.
+        
+        const targetY = 10 - (baseDepth / 3); 
+        
+        // Animate the water mesh moving to new height
+        if(waterMesh) {
+            waterMesh.position.y = targetY;
+            
+            // Change color based on depth
+            if (baseDepth > 30) waterMesh.material.color.setHex(0xFF0000); // Red (Critical)
+            else if (baseDepth > 20) waterMesh.material.color.setHex(0xF1C40F); // Yellow
+            else waterMesh.material.color.setHex(0x00BFFF); // Blue
+        }
+    }
+
+    // Initialize after page load
+    init3D();
+    load3DZones();
 </script>
 </body>
 </html>

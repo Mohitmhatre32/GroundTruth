@@ -17,6 +17,7 @@ from features.research.router import router as research_router
 from features.mobile_api.router import router as mobile_router
 from features.mobile_notifications.router import router as mobile_notifications_router
 from features.reporting.router import router as reporting_router
+from features.mobile_notifications.fcm import send_critical_notification
 
 # Import both simulator functions
 from features.monitoring.simulator_web import run_web_simulation
