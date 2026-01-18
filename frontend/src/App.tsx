@@ -14,6 +14,7 @@ import Landing from './pages/Landing';
 import Reports from './pages/Reports';
 import RealTimeCenter from './pages/RealTimeCenter';
 import Alerts from './pages/Alerts';
+import Vegetation from './pages/Vegetation';
 
 
 function App() {
@@ -28,6 +29,7 @@ function App() {
                         <Route element={<AppLayout />}>
                             <Route path="/dashboard" element={<Dashboard />} />
                             <Route path="/real-time" element={<RealTimeCenter />} />
+                            <Route path="/vegetation" element={<Vegetation />} />
                             <Route path="/reports" element={<Reports />} />
                             <Route path="/analytics" element={<Analytics />} />
                             <Route path="/policy" element={<Policy />} /> {/* Add Policy route */}
