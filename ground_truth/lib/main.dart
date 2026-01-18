@@ -44,7 +44,7 @@ void main() async {
 }
 
 class GroundTruthApp extends StatelessWidget {
-  const GroundTruthApp({Key? key}) : super(key: key);
+  const GroundTruthApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -128,7 +128,7 @@ class GroundTruthApp extends StatelessWidget {
 
 // Placeholder screens
 class SignupScreen extends StatelessWidget {
-  const SignupScreen({Key? key}) : super(key: key);
+  const SignupScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -140,7 +140,7 @@ class SignupScreen extends StatelessWidget {
 }
 
 class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({Key? key}) : super(key: key);
+  const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

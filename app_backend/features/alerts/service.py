@@ -3,6 +3,7 @@ from config import get_db
 
 COLLECTION_NAME = "alerts"
 
+
 def create_alert(station_id: str, location_name: str, water_level: float):
     """
     Creates a high-priority alert in Firestore.
