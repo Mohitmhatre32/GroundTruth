@@ -63,7 +63,7 @@ const Login = () => {
                             type="email"
                             className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
                             autoFocus
-                            placeholder="officials@gov.in"
+                            placeholder="Enter Email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
@@ -74,7 +74,7 @@ const Login = () => {
                         <input
                             type="password"
                             className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
-                            placeholder="••••••••"
+                            placeholder="Enter Passkey"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
@@ -87,7 +87,7 @@ const Login = () => {
                             <input
                                 type="password"
                                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
-                                placeholder="••••••••"
+                                placeholder="Enter Passkey Again"
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 required

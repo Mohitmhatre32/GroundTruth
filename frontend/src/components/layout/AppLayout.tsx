@@ -31,15 +31,15 @@ const AppLayout = () => {
                         <div className="p-1.5 rounded-lg bg-primary/20 text-primary">
                             <Droplets size={20} strokeWidth={2.5} />
                         </div>
-                        <motion.h2
-                            className="text-xl font-black text-white tracking-widest uppercase overflow-hidden whitespace-nowrap"
+                        <motion.h1
+                            className="text-x font-black text-white tracking-widest uppercase overflow-hidden whitespace-nowrap"
                             animate={{
                                 opacity: sidebarOpen ? 1 : 0,
                                 display: sidebarOpen ? 'block' : 'none'
                             }}
                         >
                             GroundTruth
-                        </motion.h2>
+                        </motion.h1>
                     </motion.div>
                 </div>
 

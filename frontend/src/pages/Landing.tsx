@@ -322,16 +322,20 @@ const Landing = () => {
                     </motion.div>
 
                     <div className="hidden md:flex items-center gap-8">
-                        {['Features', 'Analytics', 'Enterprise', 'Pricing'].map((item, i) => (
+                        {[
+                            { label: 'Home', href: '#home' },
+                            { label: 'Features', href: '#features' },
+                            { label: 'About Us', href: '#about' }
+                        ].map((item, i) => (
                             <motion.a
-                                key={item}
-                                href={`#${item.toLowerCase()}`}
+                                key={item.label}
+                                href={item.href}
                                 initial={{ opacity: 0, y: -10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.1 * i, duration: 0.5 }}
                                 className="text-sm font-semibold text-slate-700 hover:text-primary transition-colors relative group"
                             >
-                                {item}
+                                {item.label}
                                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300" />
                             </motion.a>
                         ))}
@@ -343,27 +347,18 @@ const Landing = () => {
                         onClick={() => navigate('/login')}
                         className="bg-gradient-to-r from-slate-900 to-slate-800 text-white px-7 py-3 rounded-full text-sm font-bold hover:shadow-xl hover:shadow-slate-900/30 hover:scale-105 transition-all duration-300"
                     >
-                        Login
+                        LogIn/SignUp
                     </motion.button>
                 </div>
             </nav>
 
             {/* Hero Section with Parallax */}
-            <section className="relative h-screen w-full flex flex-col items-center justify-center snap-start snap-always px-4">
+            <section id="home" className="relative h-screen w-full flex flex-col items-center justify-center snap-start snap-always px-4">
                 <motion.div
                     style={{ y: heroY, opacity: heroOpacity }}
                     className="relative z-10 text-center max-w-6xl mx-auto space-y-10 mt-[-5vh]"
                 >
 
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.6 }}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200/50 backdrop-blur-xl shadow-sm"
-                    >
-                        <Sparkles className="w-3 h-3 text-blue-600 animate-pulse" />
-                        <span className="text-xs font-bold text-blue-700 uppercase tracking-wider">AI-Powered Hydro Intelligence</span>
-                    </motion.div>
 
                     <div className="space-y-4">
                         <StaggeredText
@@ -403,7 +398,7 @@ const Landing = () => {
                             onClick={() => navigate('/login')}
                             className="group px-10 py-5 bg-gradient-to-r from-primary to-blue-600 text-white rounded-full font-bold text-lg shadow-2xl shadow-primary/30 hover:shadow-primary/50 hover:-translate-y-1 transition-all duration-300 flex items-center gap-3"
                         >
-                            Get Started Free
+                            Get Started
                             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                         </button>
                     </motion.div>
@@ -415,7 +410,6 @@ const Landing = () => {
                     transition={{ delay: 2, duration: 1 }}
                     className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3"
                 >
-                    <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Scroll to Explore</span>
                     <motion.div animate={{ y: [0, 10, 0] }} transition={{ repeat: Infinity, duration: 1.8 }}>
                         <ChevronDown className="w-7 h-7 text-slate-400" />
                     </motion.div>
@@ -446,6 +440,82 @@ const Landing = () => {
                         <SpotlightCard icon={TrendingUp} title="Predictive AI" description="Forecast water levels up to 6 months in advance with proprietary ML models." delay={1} />
                         <SpotlightCard icon={Shield} title="Bank-Grade Security" description="Your critical infrastructure data protected by end-to-end encryption." delay={2} />
                         <SpotlightCard icon={BarChart3} title="Custom Analytics" description="Build dashboards to track the metrics that matter most to stakeholders." delay={3} />
+                    </div>
+                </div>
+            </section>
+
+            {/* About Us Section */}
+            <section id="about" className="relative py-40 px-6 snap-start bg-slate-900/5 backdrop-blur-sm">
+                <div className="max-w-7xl mx-auto relative z-10">
+                    <div className="grid lg:grid-cols-2 gap-16 items-center">
+                        <motion.div
+                            initial={{ opacity: 0, x: -50 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.8 }}
+                            className="space-y-8"
+                        >
+                            <div className="space-y-4">
+                                <h3 className="text-primary font-bold uppercase tracking-widest text-sm">Our Mission</h3>
+                                <h2 className="text-5xl font-black text-slate-900 leading-tight">
+                                    Democratizing <br />
+                                    <span className="text-primary">Water Intelligence</span>
+                                </h2>
+                            </div>
+
+                            <p className="text-xl text-slate-600 leading-relaxed">
+                                GroundTruth was founded on a singular premise: <strong>Data is the lifeblood of conservation.</strong> While satellite imagery and IoT sensors have been used for years, they remained siloed.
+                            </p>
+
+                            <p className="text-xl text-slate-600 leading-relaxed">
+                                We bridge the gap between complex hydro-spatial modeling and everyday decision-making. By making the invisible aquifers visible, we empower governments, farmers, and industries to protect our most precious resource.
+                            </p>
+
+                            <div className="grid grid-cols-2 gap-8 pt-4">
+                                <div>
+                                    <p className="text-4xl font-black text-primary mb-1">98%</p>
+                                    <p className="text-sm font-bold text-slate-500 uppercase">Accuracy Rate</p>
+                                </div>
+                                <div>
+                                    <p className="text-4xl font-black text-primary mb-1">20+</p>
+                                    <p className="text-sm font-bold text-slate-500 uppercase">Active Nodes</p>
+                                </div>
+                            </div>
+                        </motion.div>
+
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            whileInView={{ opacity: 1, scale: 1 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 1, ease: "easeOut" }}
+                            className="relative"
+                        >
+                            <div className="aspect-square rounded-3xl overflow-hidden shadow-2xl relative">
+                                <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 to-transparent z-10" />
+                                <img
+                                    src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&q=80&w=2000"
+                                    alt="Nature Water"
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+
+                            {/* Floating Stats Card */}
+                            <motion.div
+                                animate={{ y: [0, -15, 0] }}
+                                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                                className="absolute -bottom-10 -left-10 bg-white p-6 rounded-2xl shadow-2xl border border-slate-100 z-20 hidden md:block"
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center">
+                                        <TrendingUp className="text-primary" />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-bold text-slate-400 uppercase">Sustainability Score</p>
+                                        <p className="text-xl font-black text-slate-900">+14% Improvement</p>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        </motion.div>
                     </div>
                 </div>
             </section>
