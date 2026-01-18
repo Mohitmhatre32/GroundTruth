@@ -256,7 +256,6 @@ const AlertCard = ({ alert, index }: { alert: Alert; index: number }) => {
                                 <span className="text-xs font-mono text-slate-700">{alert.location}</span>
                             </div>
                         </div>
-
                     </div>
                 </div>
             </div>
