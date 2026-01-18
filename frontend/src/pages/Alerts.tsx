@@ -257,12 +257,6 @@ const AlertCard = ({ alert, index }: { alert: Alert; index: number }) => {
                             </div>
                         </div>
 
-                        <div className="flex items-center justify-end sm:col-start-3">
-                            <button className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline flex items-center gap-1 group/btn">
-                                View History
-                                <motion.span animate={{ x: [0, 2, 0] }} transition={{ repeat: Infinity, duration: 1 }}>→</motion.span>
-                            </button>
-                        </div>
                     </div>
                 </div>
             </div>

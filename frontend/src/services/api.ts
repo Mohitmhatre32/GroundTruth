@@ -171,6 +171,14 @@ export interface GeoJSONCollection {
     features: GeoJSONFeature[];
 }
 
+// Economics Types
+export interface EconomicImpact {
+    water_saved_mcm: number;
+    financial_savings_raw: number;
+    financial_savings_text: string;
+    note: string;
+}
+
 // ============================================================================
 // API FUNCTIONS
 // ============================================================================
@@ -420,6 +428,21 @@ export const getSatelliteData = async (): Promise<GeoJSONCollection> => {
 
     if (!response.ok) {
         throw new Error(`Failed to fetch satellite data: ${response.statusText}`);
+    }
+
+    return response.json();
+};
+
+/**
+ * ECONOMICS MODULE
+ * Translates hydro-metrics into financial savings
+ */
+
+export const getEconomicImpact = async (mcmSaved: number): Promise<EconomicImpact> => {
+    const response = await fetch(`${API_BASE_URL}/economics/calculate/${mcmSaved}`);
+
+    if (!response.ok) {
+        throw new Error(`Failed to fetch economic impact: ${response.statusText}`);
     }
 
     return response.json();

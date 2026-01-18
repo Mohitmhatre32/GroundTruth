@@ -3,8 +3,9 @@ import RiskAnalysis from '../components/ui/RiskAnalysis';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid } from 'recharts';
 import { Sliders, RefreshCw, Zap, MapPin, ChevronDown, Check, Search } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { getZones, analyzeZone, Station, SimulationResult } from '../services/api';
+import { getZones, analyzeZone, Station, SimulationResult, getEconomicImpact, EconomicImpact } from '../services/api';
 import { toast } from 'sonner';
+import { IndianRupee, TrendingUp, Info as InfoIcon } from 'lucide-react';
 
 const Simulation = () => {
     // Station State
@@ -18,6 +19,9 @@ const Simulation = () => {
     const [extractionPercent, setExtractionPercent] = useState<number>(100);
     const [result, setResult] = useState<SimulationResult | null>(null);
     const [simLoading, setSimLoading] = useState(false);
+
+    // Economic State
+    const [economicImpact, setEconomicImpact] = useState<EconomicImpact | null>(null);
 
     // Dropdown state
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -62,6 +66,17 @@ const Simulation = () => {
             });
 
             setResult(simulationResult);
+
+            // Fetch Economic Impact based on net balance
+            if (simulationResult.net_balance_mcm !== undefined) {
+                try {
+                    const econData = await getEconomicImpact(simulationResult.net_balance_mcm);
+                    setEconomicImpact(econData);
+                } catch (err) {
+                    console.error('Economic fetch error:', err);
+                }
+            }
+
             toast.success('Simulation completed successfully');
         } catch (error) {
             console.error('Simulation error:', error);
@@ -221,7 +236,47 @@ const Simulation = () => {
                                     onChange={(e) => setExtractionPercent(Number(e.target.value))}
                                     className={`w-full h-3 bg-gray-200/50 rounded-lg appearance-none cursor-pointer hover:opacity-90 transition-all ${extractionPercent > 100 ? 'accent-danger' : 'accent-primary'}`}
                                 />
-                                <p className="text-xs text-textMuted mt-1 text-center">100% = Current avg extraction</p>
+
+                                {/* ECONOMIC IMPACT BOX - REAL TIME */}
+                                <div className="mt-4 p-4 rounded-xl bg-gradient-to-br from-indigo-50 to-blue-50 border border-blue-100 shadow-sm relative overflow-hidden group">
+                                    <div className="absolute -right-2 -bottom-2 opacity-10 group-hover:scale-110 transition-transform">
+                                        <IndianRupee size={64} className="text-indigo-600" />
+                                    </div>
+                                    <div className="relative z-10">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <div className="p-1.5 bg-white rounded-lg shadow-sm">
+                                                <TrendingUp size={14} className="text-indigo-600" />
+                                            </div>
+                                            <span className="text-[10px] font-black text-indigo-900 uppercase tracking-widest">Potential Impact</span>
+                                        </div>
+
+                                        {extractionPercent < 100 ? (
+                                            <div>
+                                                <p className="text-sm font-medium text-slate-600 leading-tight">
+                                                    Saving <span className="font-bold text-indigo-600">{100 - extractionPercent}%</span> of normal usage could yield a financial value of:
+                                                </p>
+                                                <div className="mt-2 flex items-baseline gap-1">
+                                                    <span className="text-2xl font-black text-indigo-700">₹{(0.5 * (100 - extractionPercent)).toFixed(2)}</span>
+                                                    <span className="text-xs font-bold text-indigo-500 uppercase">Crores / Year</span>
+                                                </div>
+                                            </div>
+                                        ) : extractionPercent === 100 ? (
+                                            <p className="text-xs font-medium text-slate-500 italic">
+                                                Adjust slider to see conservation value.
+                                            </p>
+                                        ) : (
+                                            <div>
+                                                <p className="text-sm font-medium text-red-600 leading-tight">
+                                                    Over-extraction by <span className="font-bold text-red-700">{extractionPercent - 100}%</span> increases replacement cost by:
+                                                </p>
+                                                <div className="mt-2 flex items-baseline gap-1">
+                                                    <span className="text-2xl font-black text-red-700">₹{(0.5 * (extractionPercent - 100)).toFixed(2)}</span>
+                                                    <span className="text-xs font-bold text-red-400 uppercase">Crores / Year</span>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -309,6 +364,34 @@ const Simulation = () => {
                                         </ResponsiveContainer>
                                     </div>
                                 </div>
+
+                                {/* Economic Impact Footer */}
+                                {economicImpact && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="mt-auto p-5 rounded-2xl bg-slate-900 text-white relative overflow-hidden"
+                                    >
+                                        <div className="absolute right-0 top-0 p-4 opacity-10">
+                                            <IndianRupee size={80} />
+                                        </div>
+                                        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                            <div>
+                                                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Economic Feasibility</h4>
+                                                <p className="text-lg font-bold">
+                                                    Financial {economicImpact.financial_savings_raw >= 0 ? 'Surplus/Savings' : 'Loss Factor'}
+                                                </p>
+                                                <p className="text-xs text-slate-400 mt-1 max-w-md">{economicImpact.note}</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className={`text-4xl font-black ${economicImpact.financial_savings_raw >= 0 ? 'text-success' : 'text-danger'}`}>
+                                                    {economicImpact.financial_savings_text}
+                                                </p>
+                                                <p className="text-[10px] font-black text-slate-500 uppercase">Estimated Impact Value</p>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                )}
                             </div>
                         )}
                     </div>
