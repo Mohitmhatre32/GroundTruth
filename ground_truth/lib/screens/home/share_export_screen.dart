@@ -3,7 +3,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../utils/app_colors.dart';
 
 class ShareExportScreen extends StatefulWidget {
-  const ShareExportScreen({Key? key}) : super(key: key);
+  const ShareExportScreen({super.key});
 
   @override
   State<ShareExportScreen> createState() => _ShareExportScreenState();

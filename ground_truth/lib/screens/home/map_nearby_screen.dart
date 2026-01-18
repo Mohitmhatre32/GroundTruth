@@ -118,11 +118,17 @@ class _MapNearbyScreenState extends State<MapNearbyScreen> {
           title: s['name'],
           wellId: s['id'],
           distance: '${(dist/1000).toStringAsFixed(1)}km',
+          rawDistance: dist, // Added for sorting
           depth: '${s['current_depth_m']}m',
           status: s['status'],
           color: _getStatusColor(s['status']),
         );
       }).toList();
+
+      // Sort by distance
+      if (position != null) {
+        markers.sort((a, b) => a.rawDistance.compareTo(b.rawDistance));
+      }
 
       // Add User Marker if we have location
       if (position != null) {
@@ -180,32 +186,43 @@ class _MapNearbyScreenState extends State<MapNearbyScreen> {
                   border: InputBorder.none,
                   hintStyle: TextStyle(color: Colors.white70),
                 ),
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(color: Colors.black87), // Dark text for white background
                 onSubmitted: (value) => _searchLocation(value),
               )
-            : const Text('Map & Nearby Wells'),
-        backgroundColor: AppColors.primaryBlue.withAlpha((0.9 * 255).round()),
+            : const Text('Map & Nearby Wells', style: TextStyle(color: AppColors.black, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.transparent, // Floating feel
         elevation: 0,
+        flexibleSpace: Container(
+           decoration: BoxDecoration(
+             gradient: LinearGradient(
+               begin: Alignment.topCenter,
+               end: Alignment.bottomCenter,
+               colors: [Colors.white.withOpacity(0.9), Colors.white.withOpacity(0.0)],
+             ),
+           ),
+        ),
         actions: [
-          if (_isSearching)
-            IconButton(
-              icon: Icon(Icons.close),
+          Container(
+            margin: const EdgeInsets.only(right: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 4))],
+            ),
+            child: IconButton(
+              icon: Icon(_isSearching ? Icons.close : Icons.search, color: AppColors.primaryBlue),
               onPressed: () {
                 setState(() {
-                  _isSearching = false;
-                  _searchController.clear();
-                });
-              },
-            )
-          else
-            IconButton(
-              icon: Icon(Icons.search),
-              onPressed: () {
-                setState(() {
-                  _isSearching = true;
+                  if (_isSearching) {
+                    _isSearching = false;
+                    _searchController.clear();
+                  } else {
+                    _isSearching = true;
+                  }
                 });
               },
             ),
+          ),
         ],
       ),
       body: Stack(
@@ -220,13 +237,12 @@ class _MapNearbyScreenState extends State<MapNearbyScreen> {
               minZoom: 2,
             ),
             children: [
-              // Tile Layer (Switchable)
+              // Tile Layer
               TileLayer(
                 urlTemplate: _isSatellite
                     ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
                     : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'com.technova.ground_truth', // Updated to match potential real package
-                // Add attribution for Esri if using satellite
+                userAgentPackageName: 'com.technova.ground_truth',
               ),
 
               // Markers
@@ -235,33 +251,30 @@ class _MapNearbyScreenState extends State<MapNearbyScreen> {
                     .map(
                       (well) => Marker(
                         point: well.location,
-                        width: 40,
-                        height: 40,
+                        width: 50,
+                        height: 50,
                         child: GestureDetector(
                           onTap: () => _showWellDetails(well),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: well.color,
-                              border: Border.all(
-                                color: Colors.white,
-                                width: 3,
-                              ),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Colors.black26,
-                                  blurRadius: 4,
-                                  offset: Offset(0, 2),
+                          child: Column(
+                            children: [
+                              Container(
+                                padding: EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: well.color,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.white, width: 3),
+                                  boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 3))],
                                 ),
-                              ],
-                            ),
-                            child: Icon(
-                              well.status == 'current'
-                                  ? Icons.my_location
-                                  : Icons.water_drop,
-                              color: Colors.white,
-                              size: 20,
-                            ),
+                                child: Icon(
+                                  well.status == 'current'
+                                      ? Icons.my_location
+                                      : Icons.water_drop,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                              ),
+                              // Triangle pointer or something (optional)
+                            ],
                           ),
                         ),
                       ),
@@ -271,33 +284,20 @@ class _MapNearbyScreenState extends State<MapNearbyScreen> {
             ],
           ),
 
-          // Layer Switcher
+          // Layer Switcher & My Loc (Floating Pile)
           Positioned(
             right: 16,
-            top: 100, // Below AppBar
+            top: 120, 
             child: Column(
               children: [
-                FloatingActionButton.small(
-                  heroTag: 'layer_toggle',
-                  backgroundColor: Colors.white,
-                  onPressed: () {
-                    setState(() {
-                      _isSatellite = !_isSatellite;
-                    });
-                  },
-                  child: Icon(
-                    _isSatellite ? Icons.map : Icons.satellite_alt,
-                    color: AppColors.primaryBlue,
-                  ),
+                _buildFloatingButton(
+                  icon: _isSatellite ? Icons.map : Icons.satellite_alt,
+                  onTap: () => setState(() => _isSatellite = !_isSatellite),
                 ),
-                SizedBox(height: 8),
-                FloatingActionButton.small(
-                  heroTag: 'my_loc',
-                  backgroundColor: Colors.white,
-                  onPressed: () {
-                     _mapController.move(_userLocation, 14);
-                  },
-                  child: const Icon(Icons.my_location, color: AppColors.primaryBlue,),
+                SizedBox(height: 12),
+                _buildFloatingButton(
+                  icon: Icons.my_location,
+                  onTap: () => _mapController.move(_userLocation, 14),
                 ),
               ],
             ),
@@ -315,18 +315,13 @@ class _MapNearbyScreenState extends State<MapNearbyScreen> {
               ),
             ),
 
-          // Bottom Sheet
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: GestureDetector(
-              onVerticalDragEnd: (details) {
-                if (details.primaryVelocity! > 0) {
-                  // Drag down - minimize
-                }
-              },
-              child: Container(
+          // Draggable Bottom Sheet
+          DraggableScrollableSheet(
+            initialChildSize: 0.35,
+            minChildSize: 0.15,
+            maxChildSize: 0.8,
+            builder: (BuildContext context, ScrollController scrollController) {
+              return Container(
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.only(
@@ -342,7 +337,9 @@ class _MapNearbyScreenState extends State<MapNearbyScreen> {
                   ],
                 ),
                 child: SingleChildScrollView(
+                  controller: scrollController,
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       // Handle
                       Padding(
@@ -358,106 +355,140 @@ class _MapNearbyScreenState extends State<MapNearbyScreen> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Nearest Safe Well
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Nearest Safe Well',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: AppColors.textGrey,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: AppColors.safeGreen.withAlpha((0.1 * 255).round()),
-                                border: Border.all(
-                                  color: AppColors.safeGreen,
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Row(
+                      if (_wells.isEmpty || (_wells.length == 1 && _wells.any((w) => w.id == 'user')))
+                         const Padding(
+                           padding: EdgeInsets.all(20.0),
+                           child: Text("No nearby stations found."),
+                         )
+                      else ...[
+                        // Nearest Station
+                        Builder(
+                          builder: (context) {
+                            final stations = _wells.where((w) => w.id != 'user').toList();
+                            if (stations.isEmpty) return const SizedBox.shrink();
+                            final nearest = stations.first;
+
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Icon(
-                                    Icons.water_drop,
-                                    color: AppColors.safeGreen,
-                                    size: 32,
+                                  Text(
+                                    'Nearest ${nearest.status} Station',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: AppColors.textGrey,
+                                    ),
                                   ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: const [
-                                        Text(
-                                          'Well ID: WL-001',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 14,
-                                          ),
+                                  const SizedBox(height: 8),
+                                  GestureDetector(
+                                    onTap: () => _showWellDetails(nearest),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color: nearest.color.withOpacity(0.1),
+                                        border: Border.all(
+                                          color: nearest.color,
                                         ),
-                                        SizedBox(height: 4),
-                                        Text(
-                                          'Distance: 2km | Depth: 35m',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: AppColors.textGrey,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.water_drop,
+                                            color: nearest.color,
+                                            size: 32,
                                           ),
-                                        ),
-                                      ],
+                                          const SizedBox(width: 16),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  nearest.title,
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 14,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  'ID: ${nearest.wellId} | ${nearest.distance} away',
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                    color: AppColors.textGrey,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  'Depth: ${nearest.depth}',
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                    color: AppColors.textGrey,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
-                            ),
-                          ],
+                            );
+                          }
                         ),
-                      ),
 
-                      // Other Wells
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Other Wells',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: AppColors.textGrey,
+                        // Other Wells
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Other Nearby Stations',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: AppColors.textGrey,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 12),
-                            _buildWellCard(
-                              title: 'Semi-Critical Well',
-                              wellId: 'WL-002',
-                              distance: '1.2km',
-                              depth: '28m',
-                              color: AppColors.warningYellow,
-                            ),
-                            const SizedBox(height: 8),
-                            _buildWellCard(
-                              title: 'Critical Well',
-                              wellId: 'WL-003',
-                              distance: '0.5km',
-                              depth: '15m',
-                              color: Colors.red,
-                            ),
-                          ],
+                              const SizedBox(height: 12),
+                              Builder(
+                                builder: (context) {
+                                  final stations = _wells.where((w) => w.id != 'user').toList();
+                                  if (stations.length < 2) return const Text("No other stations nearby.");
+                                  
+                                  // Take next 3
+                                  final others = stations.skip(1).take(3);
+                                  return Column(
+                                    children: others.map((well) => Padding(
+                                      padding: const EdgeInsets.only(bottom: 8.0),
+                                      child: GestureDetector(
+                                        onTap: () => _showWellDetails(well),
+                                        child: _buildWellCard(
+                                          title: well.title,
+                                          wellId: well.wellId,
+                                          distance: well.distance,
+                                          depth: well.depth,
+                                          color: well.color,
+                                        ),
+                                      ),
+                                    )).toList(),
+                                  );
+                                }
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
+                      ],
                       const SizedBox(height: 16),
                     ],
                   ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
         ],
       ),
@@ -616,6 +647,21 @@ class _MapNearbyScreenState extends State<MapNearbyScreen> {
     );
   }
 
+  Widget _buildFloatingButton({required IconData icon, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 48, width: 48,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+          boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 4))],
+        ),
+        child: Icon(icon, color: AppColors.primaryBlue),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _mapController.dispose();
@@ -629,6 +675,7 @@ class WellMarker {
   final String title;
   final String wellId;
   final String distance;
+  final double rawDistance;
   final String depth;
   final String status;
   final Color color;
@@ -639,6 +686,7 @@ class WellMarker {
     required this.title,
     required this.wellId,
     required this.distance,
+    this.rawDistance = 0,
     required this.depth,
     required this.status,
     required this.color,

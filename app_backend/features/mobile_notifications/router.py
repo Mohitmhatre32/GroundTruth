@@ -28,10 +28,10 @@ class ReadingInput(BaseModel):
 @router.post("/update_reading")
 async def receive_reading(reading: ReadingInput):
     try:
-        # 1. Get Pretty Name
+        # 1. Get Pretty Name (Ludhiana North, etc.)
         real_name = get_station_name(reading.station_id)
 
-        # 2. Update Database (Calling the service fixed above)
+        # 2. Update Database for Web Dashboard
         result = update_station_data(
             station_id=reading.station_id,
             water_level=reading.water_level,
@@ -40,6 +40,5 @@ async def receive_reading(reading: ReadingInput):
         )
         return {"status": "success", "data": result}
     except Exception as e:
-        # This will show the actual error in your uvicorn terminal
         print(f"❌ ROUTER ERROR: {e}")
         raise HTTPException(status_code=500, detail=str(e))
