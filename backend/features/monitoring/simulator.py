@@ -53,7 +53,7 @@ def main():
                 print("❌ Connection Error: Is the Uvicorn server running?")
 
         print("-" * 30)
-        time.sleep(40) # Updates every 10 seconds
+        time.sleep(10) # Updates every 10 seconds
 
 if __name__ == "__main__":
     main()
