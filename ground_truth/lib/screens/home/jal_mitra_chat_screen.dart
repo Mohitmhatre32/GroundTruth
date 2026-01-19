@@ -331,10 +331,6 @@ class _JalMitraChatScreenState extends State<JalMitraChatScreen>
                         horizontal: 24,
                         vertical: 16,
                       ),
-                      suffixIcon: Icon(
-                        Icons.mic_none_rounded,
-                        color: Colors.blue, // Blue icon
-                      ),
                     ),
                     onSubmitted: _sendMessage,
                   ),

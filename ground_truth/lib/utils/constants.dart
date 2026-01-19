@@ -4,7 +4,7 @@ class AppConstants {
   // For Physical Device: 192.168.1.104 detected.
   static const String apiBaseUrl = 'http://localhost:8000/api'; 
   static const int apiTimeoutSeconds = 30;
-  static const String geminiApiKey = 'AIzaSyAD2HEKUMoRssZKmZR0thbkqGplQ_Nsv5c'; 
+  static const String geminiApiKey = 'Your API key here'; 
 
   // Auth
   static const String tokenKey = 'auth_token';

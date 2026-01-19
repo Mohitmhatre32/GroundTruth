@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'firebase_options.dart';
 import 'services/api_service.dart';
 import 'services/alert_polling_service.dart';
 import 'services/location_service.dart';
 import 'services/fcm_service.dart';
+import 'services/cache_service.dart';
 import 'providers/auth_provider.dart';
 import 'providers/alert_provider.dart';
 import 'providers/location_provider.dart';
@@ -16,6 +18,23 @@ import 'screens/home/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Hive for caching
+  try {
+    await Hive.initFlutter();
+    print('✅ Hive initialized for caching');
+  } catch (e) {
+    print('❌ Hive initialization error: $e');
+  }
+
+  // Initialize CacheService
+  try {
+    final cacheService = CacheService();
+    await cacheService.initialize();
+    print('✅ Cache Service initialized');
+  } catch (e) {
+    print('❌ Cache Service initialization error: $e');
+  }
 
   // Set up error handling
   FlutterError.onError = (FlutterErrorDetails details) {
