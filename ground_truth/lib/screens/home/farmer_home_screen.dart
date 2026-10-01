@@ -1,12 +1,13 @@
-// ignore_for_file: unused_import, use_super_parameters
-
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:badges/badges.dart' as badges;
 import '../../services/api_service.dart';
+import '../../services/cache_service.dart';
 import '../../utils/app_colors.dart';
 import '../../widgets/liquid_wave_card.dart';
+import '../../providers/alert_provider.dart';
 import 'alerts_inbox_screen.dart';
 
 class FarmerHomeScreen extends StatefulWidget {
@@ -18,9 +19,11 @@ class FarmerHomeScreen extends StatefulWidget {
 
 class _FarmerHomeScreenState extends State<FarmerHomeScreen> with SingleTickerProviderStateMixin {
   bool _isLoading = true;
+  bool _isFromCache = false;
   Map<String, dynamic>? _nearestStation;
   String _errorMessage = '';
   late AnimationController _animController;
+  final CacheService _cacheService = CacheService();
 
   @override
   void initState() {
@@ -37,42 +40,99 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> with SingleTickerPr
 
   Future<void> _loadDashboardData() async {
     try {
+      // Initialize cache service
+      await _cacheService.initialize();
+      
       final position = await _determinePosition();
+      
+      // Save user location to cache
+      await _cacheService.saveUserLocation(position.latitude, position.longitude);
+      
+      // Try to get cached stations first for quick UI update
+      List<Map<String, dynamic>>? cachedStations = await _cacheService.getStations();
+      
+      if (cachedStations != null && cachedStations.isNotEmpty) {
+        // Use cached data immediately
+        _updateNearestStation(cachedStations, position);
+        setState(() {
+          _isFromCache = true;
+        });
+        print('⚡ Using cached stations data');
+      }
+      
+      // Fetch fresh data in the background
       final stations = await context.read<ApiService>().getStations();
       
       if (stations.isNotEmpty) {
-        stations.sort((a, b) {
-          final distA = Geolocator.distanceBetween(
-            position.latitude, position.longitude, 
-            a['latitude'], a['longitude']
-          );
-          final distB = Geolocator.distanceBetween(
-            position.latitude, position.longitude, 
-            b['latitude'], b['longitude']
-          );
-          return distA.compareTo(distB);
+        // Update cache with fresh data
+        await _cacheService.saveStations(stations);
+        
+        // Update UI with fresh data
+        _updateNearestStation(stations, position);
+        setState(() {
+          _isFromCache = false;
         });
-
-        if (mounted) {
-          setState(() {
-            _nearestStation = stations.first; 
+        print('🔄 Updated with fresh stations data');
+      } else {
+        // If no fresh data but we have cached data, keep the cached version
+        if (cachedStations == null) {
+          if (mounted) setState(() {
+            _errorMessage = "No monitoring stations found.";
             _isLoading = false;
           });
-          _animController.forward();
         }
-      } else {
-        if (mounted) setState(() {
-          _errorMessage = "No monitoring stations found.";
-          _isLoading = false;
-        });
       }
     } catch (e) {
+      print('❌ Dashboard load error: $e');
+      
+      // Try to use cached data as fallback
+      final cachedNearest = await _cacheService.getNearestStation();
+      if (cachedNearest != null && mounted) {
+        setState(() {
+          _nearestStation = cachedNearest;
+          _isFromCache = true;
+          _isLoading = false;
+        });
+        _animController.forward();
+        print('📦 Fallback to cached nearest station');
+        return;
+      }
+      
       if (mounted) {
         setState(() {
           _errorMessage = "Unable to locate nearby stations.\nPlease check GPS & Internet.";
           _isLoading = false;
         });
       }
+    }
+  }
+
+  void _updateNearestStation(List<Map<String, dynamic>> stations, Position position) {
+    if (stations.isEmpty) return;
+    
+    stations.sort((a, b) {
+      final distA = Geolocator.distanceBetween(
+        position.latitude, position.longitude, 
+        a['latitude'], a['longitude']
+      );
+      final distB = Geolocator.distanceBetween(
+        position.latitude, position.longitude, 
+        b['latitude'], b['longitude']
+      );
+      return distA.compareTo(distB);
+    });
+
+    final nearest = stations.first;
+    
+    // Cache the nearest station
+    _cacheService.saveNearestStation(nearest);
+
+    if (mounted) {
+      setState(() {
+        _nearestStation = nearest; 
+        _isLoading = false;
+      });
+      _animController.forward();
     }
   }
 
@@ -116,7 +176,7 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> with SingleTickerPr
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text("Hello, Farmer", style: TextStyle(color: AppColors.textGrey, fontSize: 14)),
+                                  Text("Hello, User", style: TextStyle(color: AppColors.textGrey, fontSize: 14)),
                                   Text("Dashboard", style: TextStyle(color: AppColors.primaryBlue, fontSize: 24, fontWeight: FontWeight.bold)),
                                 ],
                               ),
@@ -126,9 +186,34 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> with SingleTickerPr
                                   borderRadius: BorderRadius.circular(12),
                                   boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
                                 ),
-                                child: IconButton(
-                                  icon: Icon(Icons.notifications_none, color: AppColors.primaryBlue),
-                                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AlertsInboxScreen())),
+                                child: Consumer<AlertProvider>(
+                                  builder: (context, alertProvider, child) {
+                                    final unreadCount = alertProvider.unreadAlertCount;
+                                    
+                                    return badges.Badge(
+                                      position: badges.BadgePosition.topEnd(top: -4, end: -4),
+                                      showBadge: unreadCount > 0,
+                                      badgeContent: Text(
+                                        unreadCount > 99 ? '99+' : unreadCount.toString(),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      badgeStyle: badges.BadgeStyle(
+                                        badgeColor: AppColors.criticalRed,
+                                        padding: EdgeInsets.all(unreadCount > 9 ? 4 : 6),
+                                      ),
+                                      child: IconButton(
+                                        icon: Icon(Icons.notifications_none, color: AppColors.primaryBlue),
+                                        onPressed: () => Navigator.push(
+                                          context,
+                                          MaterialPageRoute(builder: (_) => const AlertsInboxScreen()),
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 ),
                               )
                             ],
@@ -165,11 +250,11 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> with SingleTickerPr
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
                                               Text(_nearestStation!['name'], style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.black)),
-                                              Text("Connected Station", style: TextStyle(fontSize: 10, color: AppColors.textGrey)),
+                                              Text(_isFromCache ? "From Cache" : "Connected Station", style: TextStyle(fontSize: 10, color: _isFromCache ? AppColors.textGrey : AppColors.textGrey)),
                                             ],
                                           ),
                                         ),
-                                        Icon(Icons.wifi, color: AppColors.safeGreen, size: 16),
+                                        Icon(_isFromCache ? Icons.storage : Icons.wifi, color: _isFromCache ? AppColors.accentCyan : AppColors.safeGreen, size: 16),
                                       ],
                                     ),
                                   ),

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import '../models/alert.dart';
 import '../services/alert_polling_service.dart';
+import '../services/alert_notification_service.dart';
 
 class AlertProvider extends ChangeNotifier {
   final AlertPollingService pollingService;
+  final AlertNotificationService _notificationService = AlertNotificationService();
   
   List<Alert> _alerts = [];
   List<Alert> _filteredAlerts = [];
@@ -31,6 +33,15 @@ class AlertProvider extends ChangeNotifier {
 
     pollingService.alertsStream.listen(
       (alerts) {
+        // Check for new alerts
+        final previousIds = _alerts.map((a) => a.alertId).toSet();
+        final newAlerts = alerts.where((a) => !previousIds.contains(a.alertId)).toList();
+        
+        // Notify if there are new alerts
+        if (newAlerts.isNotEmpty) {
+          _notificationService.notifyNewAlerts(newAlerts);
+        }
+        
         _alerts = alerts;
         _applyFilters();
         _isLoading = false;
@@ -50,13 +61,18 @@ class AlertProvider extends ChangeNotifier {
   void _applyFilters() {
     _filteredAlerts = _alerts.where((alert) {
       bool matchesSeverity = _selectedSeverityFilter == null || 
-          alert.severity == _selectedSeverityFilter;
+          alert.severity.toUpperCase() == _selectedSeverityFilter?.toUpperCase();
       bool matchesAcknowledged = !_isAcknowledgedFilter || 
           !alert.isAcknowledged;
       return matchesSeverity && matchesAcknowledged;
     }).toList();
 
-    _filteredAlerts.sort((a, b) => b.severityIndex.compareTo(a.severityIndex));
+    // Sort by severity index (highest first), then by timestamp (newest first)
+    _filteredAlerts.sort((a, b) {
+      final severityCompare = b.severityIndex.compareTo(a.severityIndex);
+      if (severityCompare != 0) return severityCompare;
+      return b.timestamp.compareTo(a.timestamp);
+    });
   }
 
   void filterBySeverity(String? severity) {
@@ -85,6 +101,10 @@ class AlertProvider extends ChangeNotifier {
       _applyFilters();
       notifyListeners();
     }
+  }
+
+  void setScaffoldKey(GlobalKey<ScaffoldMessengerState> key) {
+    _notificationService.setScaffoldKey(key);
   }
 
   @override

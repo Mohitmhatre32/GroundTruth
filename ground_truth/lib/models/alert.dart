@@ -26,17 +26,41 @@ class Alert {
   });
 
   factory Alert.fromJson(Map<String, dynamic> json) {
+    // Handle both new and old API formats
+    final String id = json['alert_id'] ?? json['id'] ?? '';
+    final String type = json['type'] ?? json['severity'] ?? 'MEDIUM';
+    final bool isRead = json['is_read'] ?? json['acknowledged'] ?? false;
+    final String msg = json['message'] ?? json['description'] ?? '';
+    
+    // Generate title from message if not provided
+    String generatedTitle = json['title'] ?? '';
+    if (generatedTitle.isEmpty && msg.isNotEmpty) {
+      // Extract first sentence or first 50 chars as title
+      final firstSentence = msg.split('.').first;
+      generatedTitle = firstSentence.length > 50 
+        ? firstSentence.substring(0, 50) + '...' 
+        : firstSentence;
+    }
+    
+    // Parse location - can be string or object
+    Map<String, dynamic>? locationMap;
+    if (json['location'] is String) {
+      locationMap = {'name': json['location']};
+    } else if (json['location'] is Map) {
+      locationMap = json['location'] as Map<String, dynamic>;
+    }
+    
     return Alert(
-      alertId: json['id'] ?? '',
+      alertId: id,
       stationId: json['station_id'] ?? '',
-      severity: json['severity'] ?? 'MEDIUM',
-      title: json['title'] ?? '',
-      message: json['description'] ?? json['message'] ?? '',
+      severity: type.toUpperCase(),
+      title: generatedTitle,
+      message: msg,
       timestamp: DateTime.parse(json['timestamp'] ?? DateTime.now().toIso8601String()),
-      isAcknowledged: json['acknowledged'] ?? false,
+      isAcknowledged: isRead,
       acknowledgedBy: json['acknowledged_by'],
-      dwlrValue: (json['dwlr_value'] as num?)?.toDouble(),
-      location: json['location'],
+      dwlrValue: (json['water_level'] as num?)?.toDouble() ?? (json['dwlr_value'] as num?)?.toDouble(),
+      location: locationMap,
     );
   }
 
@@ -62,13 +86,15 @@ class Alert {
   bool get isLow => severity == 'LOW';
 
   int get severityIndex {
-    switch (severity) {
+    final severityUpper = severity.toUpperCase().trim();
+    switch (severityUpper) {
       case 'CRITICAL':
         return 3;
       case 'HIGH':
         return 2;
       case 'MEDIUM':
         return 1;
+      case 'LOW':
       default:
         return 0;
     }

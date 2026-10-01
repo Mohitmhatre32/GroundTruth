@@ -114,13 +114,6 @@ const Login = () => {
                                 : "Need an account? Sign Up"}
                         </button>
                     </div>
-
-                    {/* Dummy Login Hint only if simple login */}
-                    {!isSignUp && (
-                        <p className="text-xs text-center text-textMuted mt-4">
-                            (Local Mode: Data saved to browser storage)
-                        </p>
-                    )}
                 </form>
             </div>
         </div>

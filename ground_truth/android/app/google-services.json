@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "178349669677",
+    "project_id": "groundtruth-61628",
+    "storage_bucket": "groundtruth-61628.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:178349669677:android:0edb1ac997a194199f67a4",
+        "android_client_info": {
+          "package_name": "com.example.ground_truth"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAh9SOE1RRaJaNT80DkxhW15RXnwNo4XEc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

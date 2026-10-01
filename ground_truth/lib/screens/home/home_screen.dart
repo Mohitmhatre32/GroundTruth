@@ -5,7 +5,6 @@ import '../../providers/alert_provider.dart';
 import 'farmer_home_screen.dart';
 import 'jal_mitra_chat_screen.dart';
 import 'map_nearby_screen.dart';
-import '../analysis/analysis_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -22,15 +21,14 @@ class _HomeScreenState extends State<HomeScreen> {
     const FarmerHomeScreen(),
     const JalMitraChatScreen(),
     const MapNearbyScreen(),
-    const AnalysisScreen(),
   ];
 
-  final List<String> _labels = ['Home', 'Advisory', 'Map', 'Analysis'];
+  final List<String> _labels = ['Home', 'Advisory', 'Map'];
   final List<IconData> _icons = [
     Icons.home_outlined,
     Icons.smart_toy_outlined,
     Icons.map_outlined,
-    Icons.analytics_outlined,
+
   ];
 
   @override
@@ -53,7 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
           setState(() => _selectedIndex = index);
         },
         items: List.generate(
-          4,
+          3,
           (index) => BottomNavigationBarItem(
             icon: Stack(
               children: [

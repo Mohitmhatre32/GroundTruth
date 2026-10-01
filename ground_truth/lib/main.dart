@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'firebase_options.dart';
 import 'services/api_service.dart';
 import 'services/alert_polling_service.dart';
 import 'services/location_service.dart';
 import 'services/fcm_service.dart';
+import 'services/cache_service.dart';
 import 'providers/auth_provider.dart';
 import 'providers/alert_provider.dart';
 import 'providers/location_provider.dart';
@@ -13,10 +15,26 @@ import 'providers/station_provider.dart';
 import 'utils/theme.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/home/home_screen.dart';
-import 'screens/analysis/analysis_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Hive for caching
+  try {
+    await Hive.initFlutter();
+    print('✅ Hive initialized for caching');
+  } catch (e) {
+    print('❌ Hive initialization error: $e');
+  }
+
+  // Initialize CacheService
+  try {
+    final cacheService = CacheService();
+    await cacheService.initialize();
+    print('✅ Cache Service initialized');
+  } catch (e) {
+    print('❌ Cache Service initialization error: $e');
+  }
 
   // Set up error handling
   FlutterError.onError = (FlutterErrorDetails details) {
@@ -46,6 +64,9 @@ void main() async {
 class GroundTruthApp extends StatelessWidget {
   const GroundTruthApp({super.key});
 
+  static final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = 
+      GlobalKey<ScaffoldMessengerState>();
+
   @override
   Widget build(BuildContext context) {
     final apiService = ApiService();
@@ -66,9 +87,15 @@ class GroundTruthApp extends StatelessWidget {
           create: (_) => AuthProvider(apiService: apiService),
         ),
         ChangeNotifierProvider(
-          create: (context) => AlertProvider(
-            pollingService: context.read<AlertPollingService>(),
-          ),
+          create: (context) {
+            final provider = AlertProvider(
+              pollingService: context.read<AlertPollingService>(),
+            );
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              provider.setScaffoldKey(scaffoldMessengerKey);
+            });
+            return provider;
+          },
         ),
         ChangeNotifierProvider(
           create: (context) => LocationProvider(
@@ -82,6 +109,7 @@ class GroundTruthApp extends StatelessWidget {
       child: Builder(
         builder: (context) {
           return MaterialApp(
+            scaffoldMessengerKey: scaffoldMessengerKey,
             title: 'GroundTruth',
             theme: AppTheme.lightTheme,
             debugShowCheckedModeBanner: false,
@@ -90,7 +118,6 @@ class GroundTruthApp extends StatelessWidget {
               '/home': (_) => const HomeScreen(),
               '/login': (_) => const LoginScreen(),
               '/settings': (_) => const SettingsScreen(),
-              '/analysis': (_) => const AnalysisScreen(),
               '/signup': (_) => const SignupScreen(),
             },
           );
