@@ -72,7 +72,6 @@ def generate_final_dataset():
         # --- COMBINE ---
         water_level = stn['base_level_mbgl'] + total_trend + seasonality + recharge_effect + noise
 
-        # Store in list
         df_temp = pd.DataFrame({
             'date': date_range,
             'station_id': stn['id'],
@@ -80,15 +79,10 @@ def generate_final_dataset():
         })
         all_data.append(df_temp)
 
-    # 3. SAVE TO CSV
     final_df = pd.concat(all_data)
     final_df.to_csv(output_file, index=False)
     print(f"✅ CSV Generated: {output_file}")
     
-    # # 4. SAVE STATIONS.JSON
-    # with open('stations.json', 'w') as f:
-    #     json.dump(stations_data, f, indent=4)
-    # print(f"✅ JSON Generated: stations.json")
 
 if __name__ == "__main__":
     generate_final_dataset()

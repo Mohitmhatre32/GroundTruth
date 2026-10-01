@@ -19,7 +19,6 @@ def get_ndvi_simulation():
         # Randomize it to simulate 'Illegal Pumping' in some areas
         ndvi_val = random.uniform(0.3, 0.85)
         
-        # Determine Color based on NDVI
         color = "#ff0000" # Dead
         if ndvi_val > 0.7: color = "#006400" # Deep Forest
         elif ndvi_val > 0.5: color = "#228B22" # Healthy Crop

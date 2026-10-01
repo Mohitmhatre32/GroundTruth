@@ -3,7 +3,6 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 from pathlib import Path
 
-# <--- ADD THIS: Fix for Windows DNS/Firebase Connection Error
 os.environ["GRPC_DNS_RESOLVER"] = "native"
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -16,7 +15,7 @@ def init_firebase():
         
         cred = credentials.Certificate(str(CRED_PATH))
         firebase_admin.initialize_app(cred)
-        print("✅ Firebase Admin Initialized")
+        print("Firebase Admin Initialized")
 
 def get_db():
     init_firebase()
